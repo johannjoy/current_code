@@ -459,6 +459,49 @@ setInterval(async () => {
       }
     } catch (e) {}
   }, 5000);
+  // Tab/window visibility monitoring
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        showWarning();
+    }
+});
+
+window.addEventListener('blur', () => {
+    showWarning();
+});
+
+function showWarning() {
+    // Create warning banner if it doesn't exist
+    let banner = document.getElementById('tab-warning');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'tab-warning';
+        banner.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+            background: linear-gradient(135deg, #ff5d6c, #ff8a4c);
+            color: white; text-align: center;
+            padding: 12px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 700;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 20px rgba(255,93,108,0.5);
+            animation: slideDown 0.3s ease-out;
+        `;
+        banner.innerHTML = '⚠️ TAB SWITCH DETECTED — Your activity is being monitored by the instructor.';
+        document.body.appendChild(banner);
+
+        // Add slideDown animation
+        const style = document.createElement('style');
+        style.textContent = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
+        document.head.appendChild(style);
+    }
+    banner.style.display = 'block';
+
+    // Hide after 4 seconds
+    setTimeout(() => {
+        if (banner) banner.style.display = 'none';
+    }, 4000);
+}
     </script>
 </body>
 </html>

@@ -4,26 +4,29 @@ import sys
 def run_python_code(code, input_data="", inject_var=None):
     python_cmd = 'python' if sys.platform == 'win32' else 'python3'
 
-    # Inject variable before user code if specified
-    if inject_var:
-        try:
-            val = int(input_data)
-            prefix = f"{inject_var} = {val}\n"
-        except ValueError:
-            try:
-                val = float(input_data)
-                prefix = f"{inject_var} = {val}\n"
-            except ValueError:
-                try:
-                    val = eval(input_data)
-                    prefix = f"{inject_var} = {repr(val)}\n"
-                except:
-                    prefix = f"{inject_var} = {repr(input_data)}\n"
-        user_code = prefix + code
-    else:
-        user_code = code
+    # Build the code to run
+    user_code = code  # default — no injection
 
-    # Wrap in sandbox that blocks dangerous modules
+    if inject_var:
+        prefix = ""
+        try:
+            val = eval(input_data) if isinstance(input_data, str) else input_data
+            if isinstance(val, dict):
+                for k, v in val.items():
+                    prefix += f"{k} = {repr(v)}\n"
+            else:
+                var_names = [v.strip() for v in inject_var.replace(',', '\n').split('\n') if v.strip()]
+                if isinstance(val, (list, tuple)) and len(var_names) > 1:
+                    for i, name in enumerate(var_names):
+                        prefix += f"{name} = {repr(val[i])}\n"
+                else:
+                    prefix = f"{var_names[0]} = {repr(val)}\n"
+        except:
+            var_names = [v.strip() for v in inject_var.replace(',', '\n').split('\n') if v.strip()]
+            prefix = f"{var_names[0]} = {repr(input_data)}\n"
+        user_code = prefix + code
+
+    # Wrap in sandbox
     sandbox = """
 import sys
 

@@ -23,4 +23,5 @@ urlpatterns = [
     path('finished/', views.finished, name='finished'),
     path('api/bonus/status/', views.bonus_status, name='bonus_status'),
     path('api/bonus/submit/', views.bonus_submit, name='bonus_submit'),
+    path('api/leaderboard-data/', views.leaderboard_data, name='leaderboard_data'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

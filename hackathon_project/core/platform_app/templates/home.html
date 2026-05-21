@@ -109,22 +109,19 @@
   .btn-ghost { background: rgba(29, 34, 56, 0.4); border: 1px solid var(--border); color: var(--text); }
   .btn-ghost:hover { background: var(--surface-2); }
 
-  .score-card {
+.score-card {
   padding: 0;
   position: relative; overflow: hidden;
   animation: fadeUp 0.6s ease-out 0.1s backwards;
   display: flex; flex-direction: column;
+  justify-content: center;
 }
 .score-top {
-  padding: 24px 24px 16px;
-  position: relative; flex: 1;
+  padding: 28px 24px 12px;
+  position: relative;
 }
 .score-top::before {
-  content: "";
-  position: absolute; top: -30px; right: -30px;
-  width: 160px; height: 160px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
   .score-label {
@@ -138,21 +135,21 @@
   background: var(--primary); opacity: 0.7;
 }
 .score-value {
-  position: relative; margin-top: 10px;
+  position: relative; margin-top: 8px;
   display: flex; align-items: baseline; gap: 8px;
   font-family: "Space Grotesk"; font-weight: 800;
-  font-size: clamp(48px, 7vw, 68px); line-height: 1;
+  font-size: clamp(52px, 7vw, 72px); line-height: 1;
 }
   .score-value .pts {
   font-size: 13px; color: var(--muted); font-weight: 500;
   font-family: "Inter", sans-serif; align-self: flex-end; margin-bottom: 6px;
 }
 .score-divider {
-  height: 1px; margin: 0 24px;
+  height: 1px; margin: 16px 24px 0;
   background: linear-gradient(to right, transparent, rgba(255,255,255,0.07), transparent);
 }
 .stats {
-  position: relative; padding: 12px 24px 20px;
+  position: relative; padding: 14px 24px 24px;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 }
 .stat .val.timer-val {
@@ -342,6 +339,18 @@
 #bonus-panel * { cursor: auto; }
 #bonus-panel button { cursor: pointer; }
 #bonus-panel textarea { cursor: text; }
+.tag.solved {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+.card.solved-card {
+  border-color: rgba(74, 222, 128, 0.25);
+}
+.card.solved-card:hover {
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 60px -10px rgba(74, 222, 128, 0.2);
+}
 </style>
 </head>
 <body>
@@ -389,7 +398,7 @@
       YOUR SCORE
     </div>
     <div class="score-value">
-      <span style="color:#ffffff;">{{ total_score }}</span>
+      <span class="text-grad">{{ total_score }}</span>
       <span class="pts">pts</span>
     </div>
   </div>
@@ -417,17 +426,18 @@
 
     <div class="cards">
       {% for problem in problems %}
-      <article class="glass card" style="animation-delay: {{ forloop.counter|add:"0.1"|floatformat:1 }}s">
+      <article class="glass card {% if problem.id in solved_ids %}solved-card{% endif %}" style="animation-delay: {{ forloop.counter|add:"0.1"|floatformat:1 }}s">
         <div class="top-line"></div>
         <div class="card-header">
-          <div class="tags">
-            <span class="tag idx">Challenge {{ forloop.counter }}</span>
-            {% if problem.difficulty == "Easy" %}<span class="tag easy">Easy</span>
-            {% elif problem.difficulty == "Medium" %}<span class="tag med">Medium</span>
-            {% else %}<span class="tag hard">Hard</span>{% endif %}
-          </div>
-          <span class="id-num">#{{ problem.id }}</span>
-        </div>
+  <div class="tags">
+    <span class="tag idx">Challenge {{ forloop.counter }}</span>
+    {% if problem.difficulty == "Easy" %}<span class="tag easy">Easy</span>
+    {% elif problem.difficulty == "Medium" %}<span class="tag med">Medium</span>
+    {% else %}<span class="tag hard">Hard</span>{% endif %}
+    {% if problem.id in solved_ids %}<span class="tag solved">✅ Solved</span>{% endif %}
+  </div>
+  <span class="id-num">#{{ problem.id }}</span>
+</div>
         <h3>{{ problem.title }}</h3>
         <p class="desc">{{ problem.description|truncatewords:25 }}</p>
         <div class="card-foot">

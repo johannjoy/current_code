@@ -51,6 +51,24 @@ def leaderboard(request):
         'teams': teams,
         'end_time': end_time.isoformat()
     })
+@login_required
+def leaderboard_data(request):
+    from django.contrib.auth.models import User
+    team_scores = TeamProgress.objects.filter(
+        team__is_staff=False
+    ).values('team__username').annotate(problem_score=Sum('points'))
+    bonus_scores = BonusSubmission.objects.filter(
+        is_correct=True
+    ).values('team__username').annotate(bonus_score=Sum('points_awarded'))
+    bonus_map = {b['team__username']: b['bonus_score'] for b in bonus_scores}
+    score_map = {t['team__username']: t['problem_score'] or 0 for t in team_scores}
+    all_teams = User.objects.filter(is_staff=False).values_list('username', flat=True)
+    teams = []
+    for username in all_teams:
+        total = score_map.get(username, 0) + bonus_map.get(username, 0)
+        teams.append({'username': username, 'total_score': total})
+    teams = sorted(teams, key=lambda x: x['total_score'], reverse=True)
+    return JsonResponse({'teams': teams})
 
 @login_required
 def waiting_room(request):
@@ -91,12 +109,15 @@ def home(request):
     end_time = state.start_time + timedelta(hours=2)
 
 
+    solved_ids = set(TeamProgress.objects.filter(team=request.user, is_solved=True).values_list('problem_id', flat=True))
+
     return render(request, 'home.html', {
-    'problems': problems,
-    'total_score': total_score,
-    'solved_count': solved_count,
-    'end_time': end_time.isoformat()   # 👈 THIS is what JS needs
-})
+        'problems': problems,
+        'total_score': total_score,
+        'solved_count': solved_count,
+        'end_time': end_time.isoformat(),
+        'solved_ids': solved_ids,
+    })
 
 @login_required
 def problem_detail(request, problem_id):

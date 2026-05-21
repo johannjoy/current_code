@@ -546,13 +546,38 @@ setInterval(updateTimer, 1000);
 updateTimer();
 
 // ── Status poll ──
-setInterval(async () => {
+// ── Status poll + leaderboard auto-refresh ──
+async function refreshLeaderboard() {
     try {
         const res = await fetch('/api/status/');
         const data = await res.json();
-        if (data.is_finished) window.location.href = '/finished/';
-    } catch (e) {}
-}, 5000);
+        if (data.is_finished) { window.location.href = '/finished/'; return; }
+    } catch(e) {}
+
+    try {
+        const res = await fetch('/api/leaderboard-data/');
+        const data = await res.json();
+        const tbody = document.querySelector('tbody');
+        tbody.innerHTML = data.teams.map((team, i) => {
+            const rank = i + 1;
+            let rankBadge;
+            if (rank === 1) rankBadge = `<span class="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 font-bold text-sm border border-yellow-500/30">1</span>`;
+            else if (rank === 2) rankBadge = `<span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-400/20 text-slate-300 font-bold text-sm border border-slate-400/30">2</span>`;
+            else if (rank === 3) rankBadge = `<span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700/20 text-orange-400 font-bold text-sm border border-orange-700/30">3</span>`;
+            else rankBadge = `<span class="text-slate-500 font-mono text-sm ml-3">${rank}</span>`;
+            const dot = rank <= 3 ? 'bg-[var(--success)]' : 'bg-slate-600';
+            const scoreColor = rank === 1 ? 'text-[var(--success)]' : 'text-slate-300';
+            return `<tr class="group">
+                <td class="px-8 py-6">${rankBadge}</td>
+                <td class="px-8 py-6"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full ${dot}"></div><span class="font-bold text-slate-200 group-hover:text-white transition-colors uppercase tracking-tight">${team.username}</span></div></td>
+                <td class="px-8 py-6 text-right"><span class="font-bold text-xl ${scoreColor}">${team.total_score} <span class="text-[10px] text-slate-500 uppercase ml-1">pts</span></span></td>
+            </tr>`;
+        }).join('');
+        document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
+    } catch(e) {}
+}
+
+setInterval(refreshLeaderboard, 30000);
 </script>
 </body>
 </html>
