@@ -1,301 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hackathon | Round 2 Complete</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
-
-        :root {
-            --bg: #0e0e0e;
-            --primary: #00e676;
-            --accent: #ff8a4c;
-            --gold: #ffd700;
-            --border: rgba(255, 255, 255, 0.08);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0e0e0e;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 24px;
-            overflow: hidden;
-        }
-
-        /* Blobs — same as waiting room */
-        .blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.15;
-            z-index: 0;
-            animation: float 16s ease-in-out infinite;
-        }
-        .blob-1 {
-            width: 500px; height: 500px;
-            top: -150px; left: -150px;
-            background: var(--gold);
-        }
-        .blob-2 {
-            width: 500px; height: 500px;
-            bottom: -150px; right: -150px;
-            background: var(--primary);
-            animation-duration: 20s;
-            animation-direction: reverse;
-        }
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -30px); }
-        }
-
-        /* Content */
-        .content {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            max-width: 480px;
-            width: 100%;
-        }
-
-        /* Trophy icon with pulse ring */
-        .trophy-wrap {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .trophy-ring {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 215, 0, 0.4);
-            animation: ring-ping 2s ease-out infinite;
-        }
-        .trophy-ring-2 {
-            animation-delay: 0.6s;
-        }
-        @keyframes ring-ping {
-            0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(2.2); opacity: 0; }
-        }
-        .trophy-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            position: relative;
-            z-index: 1;
-            animation: trophy-glow 3s ease-in-out infinite alternate;
-        }
-        @keyframes trophy-glow {
-            from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
-            to   { box-shadow: 0 0 40px rgba(255, 215, 0, 0.5); }
-        }
-
-        /* Badge */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 215, 0, 0.25);
-            background: rgba(255, 215, 0, 0.07);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--gold);
-        }
-        .badge-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--gold);
-        }
-
-        h1 {
-            font-size: clamp(28px, 7vw, 42px);
-            font-weight: 900;
-            line-height: 1.1;
-        }
-        h1 span {
-            background: linear-gradient(135deg, #ffd700, #ff8a4c);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .subtitle {
-            color: #94a3b8;
-            font-size: 15px;
-            line-height: 1.6;
-            max-width: 360px;
-        }
-
-        /* Divider */
-        .divider {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
-        }
-
-        /* Stats row */
-        .stats {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-        }
-        .stat-box {
-            flex: 1;
-            padding: 16px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .stat-box .lbl {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #64748b;
-        }
-        .stat-box .val {
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-        }
-        .stat-box .val.gold { color: var(--gold); }
-        .stat-box .val.green { color: var(--primary); }
-
-        /* Leaderboard button */
-        
-
-        /* Footer */
-        .footer {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #334155;
-            letter-spacing: 0.05em;
-        }
-
-        /* Confetti particles */
-        .particle {
-            position: fixed;
-            width: 6px;
-            height: 6px;
-            border-radius: 1px;
-            z-index: 5;
-            animation: fall linear forwards;
-            pointer-events: none;
-        }
-        @keyframes fall {
-            0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-
-        /* Fade in */
-        .content > * {
-            animation: fadeUp 0.5s ease-out backwards;
-        }
-        .content > *:nth-child(1) { animation-delay: 0.1s; }
-        .content > *:nth-child(2) { animation-delay: 0.2s; }
-        .content > *:nth-child(3) { animation-delay: 0.3s; }
-        .content > *:nth-child(4) { animation-delay: 0.4s; }
-        .content > *:nth-child(5) { animation-delay: 0.45s; }
-        .content > *:nth-child(6) { animation-delay: 0.5s; }
-        .content > *:nth-child(7) { animation-delay: 0.55s; }
-        .content > *:nth-child(8) { animation-delay: 0.6s; }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIS Hackathon — Round Complete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #07050b;
+  --ink-1: #0e0a16;
+  --ink-2: #161122;
+  --wire: rgba(179, 75, 244, 0.08);
+  --wire-bright: rgba(179, 75, 244, 0.18);
+  --amber: #b34bf4;
+  --amber-dim: rgba(179, 75, 244, 0.12);
+  --lime: #e1306c;
+  --lime-dim: rgba(225, 48, 108, 0.12);
+  --fog: #8b8599;
+  --text: #e2dfe6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  font-family:'DM Mono',monospace;
+  background:var(--ink); color:var(--text);
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding:24px; overflow:hidden;
+}
+.bg-dots {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:radial-gradient(circle, rgba(179,75,244,0.04) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.bg-bloom {
+  position:fixed; z-index:0; pointer-events:none;
+  border-radius:50%; filter:blur(120px);
+}
+.bg-bloom-a { width:500px; height:500px; top:-160px; left:-160px; background:rgba(179,75,244,0.06); }
+.bg-bloom-b { width:420px; height:420px; bottom:-130px; right:-130px; background:rgba(225,48,108,0.05); }
+.scene {
+  position:relative; z-index:10;
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+  max-width:460px; width:100%;
+}
+.scene > * { animation:fadeUp 0.5s ease-out backwards; }
+.scene > *:nth-child(1){animation-delay:0.05s;}
+.scene > *:nth-child(2){animation-delay:0.12s;}
+.scene > *:nth-child(3){animation-delay:0.19s;}
+.scene > *:nth-child(4){animation-delay:0.26s;}
+.scene > *:nth-child(5){animation-delay:0.33s;}
+.scene > *:nth-child(6){animation-delay:0.38s;}
+.scene > *:nth-child(7){animation-delay:0.43s;}
+.scene > *:nth-child(8){animation-delay:0.48s;}
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.trophy-wrap {
+  position:relative; width:80px; height:80px;
+  display:flex; align-items:center; justify-content:center;
+}
+.trophy-ring {
+  position:absolute; inset:0; border-radius:50%;
+  border:1.5px solid rgba(225,48,108,0.35);
+  animation:ringPing 2.2s ease-out infinite;
+}
+.trophy-ring-2 { animation-delay:0.7s; }
+@keyframes ringPing {
+  0%{transform:scale(1);opacity:0.6}
+  100%{transform:scale(2.4);opacity:0}
+}
+.trophy-icon {
+  width:76px; height:76px; border-radius:50%;
+  background:var(--amber-dim);
+  border:1.5px solid rgba(179,75,244,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:34px; position:relative; z-index:1;
+  animation:trophyGlow 3s ease-in-out infinite alternate;
+}
+@keyframes trophyGlow {
+  from{box-shadow:0 0 20px rgba(179,75,244,0.15);}
+  to{box-shadow:0 0 36px rgba(179,75,244,0.4);}
+}
+.round-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:4px 13px; border-radius:2px;
+  border:1px solid rgba(225,48,108,0.25); background:var(--lime-dim);
+  font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--lime);
+}
+.badge-dot { width:5px; height:5px; border-radius:50%; background:var(--amber); }
+.finish-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(40px,8vw,58px); letter-spacing:0.03em; line-height:0.95;
+}
+@keyframes gradShift {
+  0%{background-position:0% center}
+  100%{background-position:200% center}
+}
+.finish-title .amber {
+  background: linear-gradient(90deg, #b34bf4, #e1306c, #ff7a00, #b34bf4);
+  background-size:200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  animation: gradShift 4s linear infinite;
+}
+.finish-sub {
+  font-size:13px; color:var(--fog); line-height:1.7; max-width:340px;
+}
+.rule { width:100%; height:1px; background:linear-gradient(to right, transparent, var(--wire-bright), transparent); }
+.stats-row { display:flex; gap:12px; width:100%; }
+.stat-box {
+  flex:1; padding:16px 14px;
+  background:var(--ink-1); border:1px solid var(--wire-bright);
+  border-radius:3px; display:flex; flex-direction:column; gap:5px; text-align:left;
+}
+.stat-box .lbl {
+  font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--fog);
+}
+.stat-box .val {
+  font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:0.04em; line-height:1;
+}
+.stat-box .val.amber { color:var(--amber); }
+.stat-box .val.lime { color:var(--lime); }
+.lb-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 24px; border-radius:3px;
+  background:linear-gradient(135deg, #b34bf4, #e1306c); color:#fff;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:0.1em;
+  text-decoration:none; transition:opacity 0.2s, transform 0.15s;
+  font-weight: 800;
+}
+.lb-btn:hover { opacity:0.95; transform:scale(1.03); box-shadow:0 6px 20px rgba(225,48,108,0.3); }
+.footer-note { font-size:10px; color:rgba(255,255,255,0.08); letter-spacing:0.1em; }
+.particle {
+  position:fixed; width:5px; height:5px; border-radius:1px;
+  z-index:5; animation:fall linear forwards; pointer-events:none;
+}
+@keyframes fall {
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
+</style>
 </head>
 <body>
-
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-
-<div class="content">
-
-    <div class="trophy-wrap">
-        <div class="trophy-ring"></div>
-        <div class="trophy-ring trophy-ring-2"></div>
-        <div class="trophy-icon">🏆</div>
+<div class="bg-dots"></div>
+<div class="bg-bloom bg-bloom-a"></div>
+<div class="bg-bloom bg-bloom-b"></div>
+<div class="scene">
+  <div class="trophy-wrap">
+    <div class="trophy-ring"></div>
+    <div class="trophy-ring trophy-ring-2"></div>
+    <div class="trophy-icon">🏆</div>
+  </div>
+  <span class="round-badge"><span class="badge-dot"></span>Round Complete</span>
+  <div class="finish-title">Hackathon<br><span class="amber">Round</span><br>Complete!</div>
+  <p class="finish-sub">The clock has stopped. Every submission is locked in.<br>Check the leaderboard to see where your team landed.</p>
+  <div class="rule"></div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="lbl">⏱ Duration</div>
+      <div class="val amber">2:00:00</div>
     </div>
-
-    <span class="badge">
-        <span class="badge-dot"></span>
-        Round 2 Complete
-    </span>
-
-    <h1>Hackathon <span>Round 2</span><br>Completed!</h1>
-
-    <p class="subtitle">
-        The clock has stopped. Every submission is locked in.<br>
-        Check the leaderboard to see where your team landed.
-    </p>
-
-    <div class="divider"></div>
-
-    <div class="stats">
-        <div class="stat-box">
-            <div class="lbl">⏱ Duration</div>
-            <div class="val gold">2:00:00</div>
-        </div>
-        <div class="stat-box">
-            <div class="lbl">📋 Your Score</div>
-            <div class="val green">{{ total_score }} pts</div>
-        </div>
+    <div class="stat-box">
+      <div class="lbl">📋 Your Score</div>
+      <div class="val lime">{{ total_score }}<span style="font-size:13px;margin-left:3px;font-family:'DM Mono',monospace;color:var(--fog);">pts</span></div>
     </div>
+  </div>
 
 
-
-    <p class="footer">Built for champions • Hackathon Arena</p>
-
+  <div class="footer-note">Built for champions • DIS Hackathon 2026</div>
 </div>
-
 <script>
-    // Confetti burst on load
-    const colors = ['#ffd700', '#ff8a4c', '#00e676', '#6c8cff', '#ff5d6c', '#fff'];
-    function spawnParticle() {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.left = Math.random() * 100 + 'vw';
-        p.style.background = colors[Math.floor(Math.random() * colors.length)];
-        p.style.animationDuration = (Math.random() * 2.5 + 2) + 's';
-        p.style.animationDelay = (Math.random() * 2) + 's';
-        p.style.width = p.style.height = (Math.random() * 6 + 4) + 'px';
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 5000);
-    }
-    // Spawn 60 particles over 2 seconds
-    for (let i = 0; i < 60; i++) {
-        setTimeout(spawnParticle, i * 35);
-    }
-</script>
+const colors = ['#b34bf4','#e1306c','#ff7a00','#ff5577','#fff','#d6a4ff'];
+function spawnParticle() {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + 'vw';
+  p.style.background = colors[Math.floor(Math.random() * colors.length)];
+  p.style.animationDuration = (Math.random() * 2.5 + 2) + 's';
+  p.style.animationDelay = (Math.random() * 2) + 's';
+  const sz = (Math.random() * 5 + 3) + 'px';
+  p.style.width = sz; p.style.height = sz;
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 5000);
+}
+for (let i = 0; i < 70; i++) setTimeout(spawnParticle, i * 30);
 
+
+</script>
 </body>
 </html>

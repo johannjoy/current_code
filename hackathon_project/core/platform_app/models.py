@@ -5,13 +5,17 @@ class HackathonState(models.Model):
     is_started = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
     start_time = models.DateTimeField(null=True, blank=True, help_text="When the hackathon officially starts")
+    hints_enabled = models.BooleanField(default=False, help_text='Allow teams to request AI hints on problems')
+    tutorial_is_started = models.BooleanField(default=False)
+    tutorial_is_finished = models.BooleanField(default=False)
+    tutorial_start_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Hackathon State"
 class Problem(models.Model):
     DIFFICULTY_CHOICES = [('Easy', 'Easy'), ('Medium', 'Medium'), ('Hard', 'Hard')]
     input_variable = models.CharField(max_length=100, default="n", help_text="Variable name injected into student code e.g. 'n', 'data', 'nums'")
-    
+    is_hidden = models.BooleanField(default=False)
     title = models.CharField(max_length=200)
     description = models.TextField()
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='Easy')
@@ -23,6 +27,7 @@ class Problem(models.Model):
     base_points = models.IntegerField(default=100)
     starter_code = models.TextField(blank=True, default="")
     examples = models.TextField(blank=True, default="")
+    is_tutorial = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

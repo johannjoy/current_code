@@ -1,5 +1,4 @@
 from urllib import request
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -9,6 +8,9 @@ from .utils import run_python_code
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Case, When, IntegerField
+import json
+import urllib.request as urlreq
+import urllib.error
 @login_required
 def leaderboard(request):
     state = HackathonState.objects.first()
@@ -16,7 +18,10 @@ def leaderboard(request):
         return redirect('waiting_room')
     if state.is_finished:
         return redirect('finished')
-    if not state.is_started:
+        
+    # 1. This lets users in if the tutorial is running
+    tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished
+    if not state.is_started and not tutorial_active:
         return redirect('waiting_room')
 
     # Regular points from problems
@@ -45,12 +50,24 @@ def leaderboard(request):
     # Sort by total
     teams = sorted(teams, key=lambda x: x['total_score'], reverse=True)
 
-    start_time = state.start_time
-    end_time = start_time + timedelta(hours=2)
+    # 2. FIXED TIME MATH: Calculates the correct countdown clock safely
+    if tutorial_active:
+        start_time = state.tutorial_start_time or timezone.now()
+        end_time = start_time + timedelta(minutes=20)
+    else:
+        start_time = state.start_time or timezone.now()
+        end_time = start_time + timedelta(hours=2)
+
+    # Prevent potential timezone offset rendering issues
+    from django.utils import timezone as tz
+    if end_time.tzinfo is None:
+        end_time = tz.make_aware(end_time)
+
     return render(request, 'leaderboard.html', {
         'teams': teams,
-        'end_time': end_time.isoformat()
+        'end_time': end_time.strftime('%Y-%m-%dT%H:%M:%SZ')
     })
+
 @login_required
 def leaderboard_data(request):
     from django.contrib.auth.models import User
@@ -77,83 +94,104 @@ def waiting_room(request):
         return redirect('home')
     if state and state.is_finished:
         return redirect('finished')
+    if state and state.tutorial_is_started and not state.tutorial_is_finished:
+        return redirect('home')
     return render(request, 'waiting_room.html')
 
 
 @login_required
 def home(request):
     state = HackathonState.objects.first()
-
     if not state:
         return redirect('waiting_room')
-
     if state.is_finished:
         return redirect('finished')
 
-    if not state.is_started:
+    # Determine active mode
+    tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished
+    official_active = state.is_started and not state.is_finished
+
+    if not official_active and not tutorial_active:
         return redirect('waiting_room')
 
-    problems = Problem.objects.all().order_by(
-    Case(
-        When(difficulty='Easy', then=0),
-        When(difficulty='Medium', then=1),
-        When(difficulty='Hard', then=2),
-        output_field=IntegerField()
-    )
-)
+    if tutorial_active:
+        problems = Problem.objects.filter(is_hidden=False, is_tutorial=True).order_by(
+            Case(When(difficulty='Easy', then=0), When(difficulty='Medium', then=1), When(difficulty='Hard', then=2), output_field=IntegerField())
+        )
+        from django.utils import timezone as tz
+        start = state.tutorial_start_time
+        if start.tzinfo is None:
+            start = tz.make_aware(start)
+        end_time = start + timedelta(minutes=20)
+        mode = 'tutorial'
+    else:
+        problems = Problem.objects.filter(is_hidden=False, is_tutorial=False).order_by(
+            Case(When(difficulty='Easy', then=0), When(difficulty='Medium', then=1), When(difficulty='Hard', then=2), output_field=IntegerField())
+        )
+        from django.utils import timezone as tz
+        start = state.start_time
+        if start.tzinfo is None:
+            start = tz.make_aware(start)
+        end_time = start + timedelta(hours=2)
+        mode = 'official'
 
     bonus_points = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
     total_score = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user)) + bonus_points
     solved_count = TeamProgress.objects.filter(team=request.user, is_solved=True).count()
-    # 🔥 ADD THIS
-    end_time = state.start_time + timedelta(hours=2)
-
-
     solved_ids = set(TeamProgress.objects.filter(team=request.user, is_solved=True).values_list('problem_id', flat=True))
 
     return render(request, 'home.html', {
         'problems': problems,
         'total_score': total_score,
         'solved_count': solved_count,
-        'end_time': end_time.isoformat(),
+        'end_time': end_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
         'solved_ids': solved_ids,
+        'mode': mode,
     })
-
 @login_required
 def problem_detail(request, problem_id):
     state = HackathonState.objects.first()
     if not state:
         return redirect('waiting_room')
-
     if state.is_finished:
         return redirect('finished')
 
-    if not state.is_started:
+    tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished
+    official_active = state.is_started and not state.is_finished
+
+    if not official_active and not tutorial_active:
         return redirect('waiting_room')
 
-    end_time = state.start_time + timedelta(hours=2)
-    problem = get_object_or_404(Problem, id=problem_id)
-    progress, created = TeamProgress.objects.get_or_create(
-    team=request.user,
-    problem=problem
-)
+    if tutorial_active:
+        from django.utils import timezone as tz
+        start = state.tutorial_start_time
+        if start.tzinfo is None:
+            start = tz.make_aware(start)
+        end_time = start + timedelta(minutes=20)
+        mode = 'tutorial'
+    else:
+        end_time = state.start_time + timedelta(hours=2)
+        mode = 'official'
 
+    problem = get_object_or_404(Problem, id=problem_id, is_hidden=False)
+    progress, created = TeamProgress.objects.get_or_create(team=request.user, problem=problem)
     if created:
         progress.current_code = problem.starter_code
         progress.save()
+
     bonus_points = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
     total_score = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user)) + bonus_points
-    # Logic for navigation arrows
     prev_id = problem_id - 1 if problem_id > 1 else None
-    next_id = problem_id + 1 if problem_id < 15 else None # Assuming 15 problems total
+    next_id = problem_id + 1 if problem_id < 15 else None
 
     return render(request, 'problem.html', {
-        'end_time': end_time.isoformat(),
-        'problem': problem, 
-        'progress': progress, 
+        'end_time': end_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'problem': problem,
+        'progress': progress,
         'total_score': total_score,
         'prev_id': prev_id,
-        'next_id': next_id
+        'next_id': next_id,
+        'mode': mode,
     })
 
 # API for Save/Load/Submit
@@ -176,18 +214,20 @@ def submit_code(request):
         p_id = request.POST.get('problem_id')
         user_code = request.POST.get('code')
         problem = get_object_or_404(Problem, id=p_id)
+        
         if 'import' in user_code:
             return JsonResponse({
                 'status': 'Runtime Error',
                 'error': 'Import statements are not allowed.'
             })
+            
         progress = get_object_or_404(TeamProgress, team=request.user, problem=problem)
         state = HackathonState.objects.first()
         
         # 1. Run Hidden Test Cases
         for case in problem.hidden_test_cases:
             try:
-                input_data = case['input']   # 👈 string input
+                input_data = case['input']   
                 expected = case['expected']
 
                 output, error = run_python_code(user_code, input_data, inject_var=problem.input_variable)
@@ -207,26 +247,29 @@ def submit_code(request):
                     'error': str(e)
                 })
 
-
-
         # 2. If it reaches here, all cases passed
         if not progress.is_solved:
-            # Calculate points: Base - (minutes elapsed)
-            elapsed = (timezone.now() - state.start_time).total_seconds()
-            time_penalty = int(elapsed / 120)
-            final_points = max(20, problem.base_points - time_penalty)
+            tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished if state else False
             
-            progress.points = final_points
+            if tutorial_active:
+                # Tutorial Round: Mark as solved, but reward NO points
+                final_points = 0
+            else:
+                # Official Round: Calculate points with time penalty safely
+                start_time = state.start_time if (state and state.start_time) else timezone.now()
+                elapsed = (timezone.now() - start_time).total_seconds()
+                time_penalty = int(elapsed / 120)
+                final_points = max(20, problem.base_points - time_penalty)
+            
+            # Save the record to database
             progress.is_solved = True
+            progress.points = final_points
+            progress.current_code = user_code
             progress.save()
-
-        # 3. Get total team score to update the header
-        new_total = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user))
-        
-        return JsonResponse({
-            'status': 'Correct Answer!', 
-            'new_total': new_total
-        })
+            
+            return JsonResponse({'status': 'Accepted', 'points': final_points})
+            
+        return JsonResponse({'status': 'Already Solved'})
 
 @login_required
 def bonus_status(request):
@@ -345,25 +388,36 @@ def bonus_submit(request):
 @login_required
 def check_hackathon_status(request):
     state = HackathonState.objects.first()
-
     if not state or not state.start_time:
-        return JsonResponse({
-            'is_finished': False,
-            'is_live': False
-        })
+        # Check tutorial
+        if state and state.tutorial_is_started and not state.tutorial_is_finished and state.tutorial_start_time:
+            tutorial_end = state.tutorial_start_time + timedelta(minutes=20)
+            if timezone.now() >= tutorial_end:
+                state.tutorial_is_finished = True
+                state.save()
+                return JsonResponse({'is_finished': False, 'is_live': False, 'tutorial_live': False, 'tutorial_finished': True})
+            return JsonResponse({'is_finished': False, 'is_live': False, 'tutorial_live': True, 'tutorial_finished': False})
+        return JsonResponse({'is_finished': False, 'is_live': False, 'tutorial_live': False, 'tutorial_finished': False})
 
     end_time = state.start_time + timedelta(hours=2)
-
     if timezone.now() >= end_time:
         state.is_finished = True
         state.save()
 
-    is_finished = state.is_finished
-    is_live = state.is_started and not state.is_finished
+    # Check tutorial timeout too
+    if state.tutorial_is_started and not state.tutorial_is_finished and state.tutorial_start_time:
+        tutorial_end = state.tutorial_start_time + timedelta(minutes=20)
+        if timezone.now() >= tutorial_end:
+            state.tutorial_is_finished = True
+            state.save()
+
+    tutorial_live = state.tutorial_is_started and not state.tutorial_is_finished and not state.is_started
 
     return JsonResponse({
-        'is_finished': is_finished,
-        'is_live': is_live
+        'is_finished': state.is_finished,
+        'is_live': state.is_started and not state.is_finished,
+        'tutorial_live': tutorial_live,
+        'tutorial_finished': state.tutorial_is_finished,
     })
 @login_required
 def run_code_custom(request):
@@ -380,3 +434,74 @@ def finished(request):
     bonus_points = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
     total_score = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user)) + bonus_points
     return render(request, 'finished.html', {'total_score': total_score})
+@login_required
+def ai_hint(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    state = HackathonState.objects.first()
+    if not state or not state.hints_enabled:
+        return JsonResponse({'hint': 'AI hints have been disabled by your instructor.'})
+
+    problem_id = request.POST.get('problem_id')
+    current_code = request.POST.get('code', '')
+    console_output = request.POST.get('console_output', '').strip()
+    problem = get_object_or_404(Problem, id=problem_id)
+
+    cache_key = f'hint_used_{request.user.id}_{problem_id}'
+    from django.core.cache import cache
+    if cache.get(cache_key):
+        return JsonResponse({'hint': '⚠️ You have already used your hint for this problem.', 'already_used': True})
+    cache.set(cache_key, True, timeout=60*60*3)
+
+    from django.conf import settings
+    api_key = getattr(settings, 'GROQ_API_KEY', '')
+    if not api_key:
+        return JsonResponse({'hint': 'API key not configured. Contact admin.'})
+
+    code_block = current_code.strip() or '(empty — student has not written anything yet)'
+
+    if console_output:
+        console_section = '\n\nLatest console output or error:\n' + console_output + '\nIf this shows an error or wrong answer, address it in your hint.'
+    else:
+        console_section = ''
+
+    prompt = (
+        "You are a helpful coding tutor for a Python hackathon. Help the student with this problem.\n\n"
+        "Problem: " + problem.title + "\n"
+        "Description: " + problem.description + "\n\n"
+        "Student's current code:\n" + code_block + "\n"
+        + console_section + "\n\n"
+        "Give a helpful hint to guide them toward the solution WITHOUT giving away the full answer. "
+        "Be encouraging, concise (2-4 sentences max), and specific to their code and any errors shown. "
+        "Focus on the approach or algorithm, not the exact implementation."
+    )
+
+    payload = json.dumps({
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [{'role': 'user', 'content': prompt}],
+        'max_tokens': 300,
+        'temperature': 0.7,
+    }).encode()
+
+    req = urlreq.Request(
+        'https://api.groq.com/openai/v1/chat/completions',
+        data=payload,
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}',
+            'User-Agent': 'Mozilla/5.0',
+        },
+        method='POST'
+    )
+
+    try:
+        with urlreq.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+            hint_text = data['choices'][0]['message']['content']
+            return JsonResponse({'hint': hint_text})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors='ignore')
+        return JsonResponse({'hint': f'API error {e.code}: {body}'})
+    except Exception as e:
+        return JsonResponse({'hint': f'Could not load hint: {e}'})

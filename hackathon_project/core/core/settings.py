@@ -126,4 +126,5 @@ LOGIN_REDIRECT_URL = '/'  # Sends them straight to waiting room
 
 
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+GROQ_API_KEY = 'x'
 

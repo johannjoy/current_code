@@ -1,437 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hackathon | Waiting Room</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #080a10;
-            --surface: #0e1018;
-            --card: #11141f;
-            --border: rgba(255,255,255,0.06);
-            --border-bright: rgba(255,255,255,0.12);
-            --primary: #5b8fff;
-            --accent: #ff6b35;
-            --green: #3ddc84;
-            --text: #e8eaf0;
-            --muted: #5a5f72;
-            --grad: linear-gradient(135deg, #5b8fff 0%, #ff6b35 100%);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIS Hackathon — Waiting Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #07050b;
+      --ink-1: #0e0a16;
+      --ink-2: #161122;
+      --ink-3: #221a33;
+      --wire: rgba(179, 75, 244, 0.08);
+      --wire-bright: rgba(179, 75, 244, 0.18);
+      --amber: #b34bf4;
+      --amber-dim: rgba(179, 75, 244, 0.12);
+      --lime: #e1306c;
+      --lime-dim: rgba(225, 48, 108, 0.12);
+      --fog: #8b8599;
+      --text: #e2dfe6;
+      --danger: #ff5577;
+      --success: #3cd070;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--ink);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .bg-dots {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(179, 75, 244, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .bg-bloom {
+      position: fixed; z-index: 0; pointer-events: none;
+      border-radius: 50%; filter: blur(110px);
+    }
+    .bg-bloom-a { width: 500px; height: 500px; top: -180px; left: -180px; background: rgba(179, 75, 244, 0.06); }
+    .bg-bloom-b { width: 400px; height: 400px; bottom: -140px; right: -140px; background: rgba(225, 48, 108, 0.05); }
+    #bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+    .scene {
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column; align-items: center;
+      width: min(560px, 94vw);
+    }
+    .card {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(14, 10, 22, 0.5) 50%, rgba(179, 75, 244, 0.04) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-left: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 20px;
+      padding: 44px 40px 36px;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(40px) saturate(160%);
+      -webkit-backdrop-filter: blur(40px) saturate(160%);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 0 60px rgba(179, 75, 244, 0.03);
+      animation: cardIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) backwards, cardPulse 6s ease-in-out 0.65s infinite;
+    }
+    @keyframes cardPulse {
+      0%, 100% { box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 60px rgba(179,75,244,0.03); }
+      50% { box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 0 80px rgba(179,75,244,0.07), 0 0 60px rgba(179,75,244,0.12), 0 0 120px rgba(225,48,108,0.06); }
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #b34bf4, #e1306c 50%, #ff7a00);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+    .logo-bracket { font-size: 18px; color: #e1306c; }
+    .logo-name { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fog); }
+    .card-headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 10vw, 62px);
+      line-height: 0.9; letter-spacing: 0.03em;
+      text-align: center; margin-bottom: 12px;
+    }
+    @keyframes gradShift {
+      0% { background-position: 0% center }
+      100% { background-position: 200% center }
+    }
+    .card-headline .amber {
+      background: linear-gradient(90deg, #b34bf4, #e1306c, #ff7a00, #b34bf4);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: inline-block; animation: gradShift 4s linear infinite;
+    }
+    .card-sub { text-align: center; color: var(--fog); font-size: 12px; line-height: 1.7; max-width: 300px; margin-bottom: 20px; }
+    .progress-wrap { width: 100%; margin-bottom: 12px; }
+    .progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 10px; letter-spacing: 0.1em; color: var(--fog); }
+    .progress-label .pct { color: var(--amber); }
+    .progress-track { width: 100%; height: 2px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
+    .progress-fill {
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, #b34bf4, #e1306c, #ff7a00, #e1306c, #b34bf4);
+      background-size: 300% 100%; border-radius: 999px;
+      animation: gradFlow 3s linear infinite;
+    }
+    @keyframes gradFlow {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 300% 0%; }
+    }
+    .status-line {
+      font-size: 11px; color: var(--fog); margin-bottom: 20px;
+      height: 16px; display: flex; align-items: center; gap: 7px;
+    }
+    .status-line::before { content: '>'; color: var(--amber); }
+    #status-msg { transition: opacity 0.3s; }
+    .cursor-blink {
+      display: inline-block; width: 6px; height: 11px;
+      background: var(--amber); border-radius: 1px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
+    .rule { width: 100%; height: 1px; margin-bottom: 24px; background: linear-gradient(to right, transparent, var(--wire-bright), transparent); }
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+    .info-cell {
+      padding: 12px 10px;
+      border: 1px solid rgba(255,255,255,0.06); border-top: 1px solid rgba(255,255,255,0.11);
+      border-radius: 10px; background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .info-cell .lbl { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fog); }
+    .info-cell .val { font-size: 13px; font-weight: 500; color: var(--text); }
+    .info-cell .val.amber { color: var(--amber); }
+    .info-cell .val.lime { color: var(--lime); }
+    .htp-btn {
+      margin-top: 20px; display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08); border-top: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      color: var(--fog); font-size: 12px; cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Mono', monospace;
+    }
+    .htp-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .footprint { margin-top: 20px; z-index: 10; font-size: 10px; color: rgba(255,255,255,0.08); letter-spacing: 0.15em; text-transform: uppercase; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Tutorial overlay */
+    #tutorial-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: linear-gradient(135deg, rgba(5,5,6,0.75) 0%, rgba(14,10,22,0.8) 100%);
+      backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.35s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    #tutorial-overlay.hidden { display: none; }
+    .tutorial-card {
+      width: min(580px, 94vw);
+      background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(14,10,22,0.55) 60%, rgba(179,75,244,0.05) 100%);
+      border: 1px solid rgba(255,255,255,0.08); border-top: 1px solid rgba(255,255,255,0.2);
+      border-left: 1px solid rgba(255,255,255,0.13); border-radius: 24px; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 60px rgba(179,75,244,0.04);
+      backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%);
+      animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(32px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
+    .tut-topbar { height: 2px; background: linear-gradient(90deg, #b34bf4, #e1306c 50%, #ff7a00); }
+    .tut-progress { display: flex; gap: 4px; padding: 18px 24px 0; }
+    .tprog { flex: 1; height: 2px; border-radius: 999px; background: rgba(255,255,255,0.08); transition: background 0.3s; }
+    .tprog.active { background: var(--amber); }
+    .tprog.done { background: var(--lime); }
+    .tut-body { padding: 20px 24px 0; }
+    .tut-step { display: none; }
+    .tut-step.active { display: block; }
+    .step-chip { display: inline-block; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber); border: 1px solid rgba(179,75,244,0.25); border-radius: 2px; padding: 3px 8px; margin-bottom: 12px; }
+    .step-head { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.03em; margin-bottom: 8px; }
+    .step-desc { font-size: 12px; color: var(--fog); line-height: 1.7; margin-bottom: 16px; }
+    .step-bullets { display: flex; flex-direction: column; gap: 8px; }
+    .step-bullet {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+      border-top: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+      padding: 10px 12px; font-size: 12px; color: var(--fog); line-height: 1.55;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .step-bullet strong { color: var(--text); font-weight: 500; }
+    .step-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+    .tut-footer {
+      padding: 18px 24px 22px; display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.06); margin-top: 20px; background: rgba(255,255,255,0.02);
+    }
+    .tut-step-n { font-size: 11px; color: var(--fog); }
+    .tut-btns { display: flex; gap: 8px; }
+    .tut-btn { padding: 8px 18px; border-radius: 20px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+    .tut-btn-skip { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.16); border-radius: 20px; color: var(--fog); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .tut-btn-skip:hover { color: var(--text); }
+    .tut-btn-next { background: linear-gradient(135deg, #b34bf4, #e1306c); color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.08em; padding: 8px 22px; font-weight: 800; }
+    .tut-btn-next:hover { opacity: 0.85; }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            cursor: none;
-        }
-
-        /* Cursor */
-        #cursor {
-            position: fixed; width: 8px; height: 8px; border-radius: 50%;
-            background: var(--primary); pointer-events: none; z-index: 999;
-            transform: translate(-50%,-50%); mix-blend-mode: screen;
-        }
-        #cursor-ring {
-            position: fixed; width: 30px; height: 30px; border-radius: 50%;
-            border: 1px solid rgba(91,143,255,0.4); pointer-events: none; z-index: 998;
-            transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s;
-        }
-
-        /* Background */
-        #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-        /* Scanlines overlay */
-        .scanlines {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.08) 2px,
-                rgba(0,0,0,0.08) 4px
-            );
-        }
-
-        /* Main layout */
-        .wrapper {
-            position: relative; z-index: 10;
-            display: flex; flex-direction: column; align-items: center;
-            gap: 0; width: min(520px, 94vw);
-        }
-
-
-
-        /* Main card */
-        .card {
-            width: 100%;
-            background: var(--card);
-            border: 1px solid var(--border-bright);
-            border-radius: 14px;
-            padding: 40px 40px 36px;
-            display: flex; flex-direction: column; align-items: center;
-            position: relative; overflow: hidden;
-        }
-        .card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(to right, transparent, rgba(91,143,255,0.6), rgba(255,107,53,0.4), transparent);
-        }
-
-        /* Logo — clean wordmark style instead of emoji */
-        .logo-wrap {
-            display: flex; align-items: center; gap: 12px;
-            margin-bottom: 32px;
-        }
-        .logo-mark {
-            width: 42px; height: 42px;
-            border: 1.5px solid rgba(91,143,255,0.5);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-        }
-        .logo-mark svg {
-            width: 22px; height: 22px;
-        }
-        .logo-text {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13px; font-weight: 600;
-            letter-spacing: 0.12em;
-            color: var(--text);
-        }
-        .logo-text span {
-            background: var(--grad);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-
-        /* Status badge */
-        .badge {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 5px 13px; border-radius: 6px;
-            border: 1px solid rgba(61,220,132,0.2);
-            background: rgba(61,220,132,0.06);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-            color: var(--green); margin-bottom: 24px;
-        }
-        .badge-dot {
-            width: 6px; height: 6px; border-radius: 50%; background: var(--green);
-            box-shadow: 0 0 6px var(--green);
-            animation: pulse-dot 2s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        h1 {
-            font-size: clamp(28px, 6vw, 40px);
-            font-weight: 800; line-height: 1.1;
-            text-align: center; margin-bottom: 10px;
-            letter-spacing: -0.02em;
-        }
-        h1 .grad {
-            background: var(--grad);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-
-        .subtitle {
-            text-align: center; color: var(--muted);
-            font-size: 14px; line-height: 1.6;
-            max-width: 300px; margin-bottom: 36px;
-            font-weight: 300;
-        }
-
-        /* Loading indicator — clean bar instead of orbit */
-        .loader-wrap {
-            width: 100%; margin-bottom: 28px;
-        }
-        .loader-label {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px;
-        }
-        .loader-label span {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
-        }
-        .loader-label .loader-pct {
-            color: var(--primary);
-        }
-        .loader-track {
-            width: 100%; height: 3px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 999px; overflow: hidden;
-        }
-        .loader-fill {
-            height: 100%;
-            background: var(--grad);
-            border-radius: 999px;
-            animation: indeterminate 2.2s cubic-bezier(0.4,0,0.6,1) infinite;
-            transform-origin: left;
-        }
-        @keyframes indeterminate {
-            0%   { transform: scaleX(0) translateX(0); }
-            40%  { transform: scaleX(0.6) translateX(30%); }
-            100% { transform: scaleX(0) translateX(250%); }
-        }
-
-        /* Status line */
-        .status-line {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px; color: var(--muted);
-            margin-bottom: 32px; height: 16px;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .status-line::before {
-            content: '>';
-            color: var(--primary); font-size: 12px;
-        }
-        #status-msg { transition: opacity 0.3s; }
-        .cursor-blink {
-            display: inline-block; width: 6px; height: 12px;
-            background: var(--primary); border-radius: 1px;
-            animation: blink 1s step-end infinite; margin-left: 2px;
-        }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-        /* Divider */
-        .divider {
-            width: 100%; height: 1px; margin-bottom: 24px;
-            background: linear-gradient(to right, transparent, var(--border-bright), transparent);
-        }
-
-        /* Info grid */
-        .info-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; width: 100%;
-        }
-        .info-box {
-            padding: 14px 12px; border-radius: 10px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 6px;
-        }
-        .info-box .lbl {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 9px; font-weight: 600;
-            letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
-        }
-        .info-box .val {
-            font-family: 'Outfit', sans-serif;
-            font-size: 14px; font-weight: 700; color: var(--text);
-        }
-        .info-box .val.blue  { color: var(--primary); }
-        .info-box .val.green { color: var(--green); }
-
-        /* Footer */
-        .footer {
-            margin-top: 20px; z-index: 10;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px; color: #1e2130; letter-spacing: 0.12em;
-        }
-    </style>
+    /* Bonus toast */
+    .bonus-global-toast {
+      position:fixed; bottom:28px; right:28px; z-index:99999;
+      background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(14,10,22,0.7) 100%);
+      border:1px solid rgba(255,255,255,0.15); border-top:1px solid rgba(255,255,255,0.3);
+      border-left:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:18px 22px;
+      display:flex; align-items:center; gap:14px;
+      backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%);
+      box-shadow:0 32px 80px rgba(0,0,0,0.6); max-width:320px; cursor:pointer;
+      animation:bonusToastIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+      pointer-events:all; text-decoration:none; overflow:hidden;
+    }
+    @keyframes bonusToastIn { from{opacity:0;transform:translateX(40px) scale(0.92);} to{opacity:1;transform:translateX(0) scale(1);} }
+    .bonus-global-toast.out { animation:bonusToastOut 0.35s ease-in forwards; }
+    @keyframes bonusToastOut { to{opacity:0;transform:translateX(40px) scale(0.9);} }
+    .bgt-icon { width:42px;height:42px;border-radius:12px;flex-shrink:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center; }
+    .ig-gradient-text {
+      background: linear-gradient(90deg, #b34bf4, #e1306c, #ff7a00, #b34bf4);
+      background-size: 200% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      display: inline-block; animation: gradShift 4s linear infinite;
+    }
+    .bgt-title { font-weight:800; font-size:13px; margin-bottom:2px; }
+    .bgt-sub { font-size:11px; color:var(--fog); font-family:'DM Mono',monospace; }
+    .bgt-cta { font-size:10px;color:#fff;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;background:rgba(255,255,255,0.06);white-space:nowrap; }
+  </style>
 </head>
 <body>
+  <div class="bg-dots"></div>
+  <div class="bg-bloom bg-bloom-a"></div>
+  <div class="bg-bloom bg-bloom-b"></div>
+  <canvas id="bg-canvas"></canvas>
 
-<canvas id="bg-canvas"></canvas>
-<div class="scanlines"></div>
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-
-<div class="wrapper">
-    <div class="card" id="card">
-        <div class="logo-wrap">
-            <div class="logo-mark">
-                <!-- Clean geometric logo: two angle brackets -->
-                <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polyline points="8,4 2,11 8,18" stroke="#5b8fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <polyline points="14,4 20,11 14,18" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="logo-text">DIS <span>HACKATHON</span></div>
+  <!-- Tutorial overlay -->
+  <div id="tutorial-overlay" class="hidden">
+    <div class="tutorial-card">
+      <div class="tut-topbar"></div>
+      <div class="tut-progress" id="tut-progress">
+        <div class="tprog active" id="tp-0"></div>
+        <div class="tprog" id="tp-1"></div>
+        <div class="tprog" id="tp-2"></div>
+        <div class="tprog" id="tp-3"></div>
+      </div>
+      <div class="tut-body">
+        <div class="tut-step active" id="step-0">
+          <div class="step-chip">// Getting Started</div>
+          <div class="step-head">Welcome to the Arena</div>
+          <p class="step-desc">You've joined. Here's a quick tour before the clock starts.</p>
+          <div class="step-bullets">
+            <div class="step-bullet"><span class="step-icon">⏱</span><div><strong>2 hours</strong> — clock starts on admin signal. Every second counts.</div></div>
+            <div class="step-bullet"><span class="step-icon">📋</span><div><strong>15 challenges</strong> from Easy to Hard. Solve them in any order.</div></div>
+            <div class="step-bullet"><span class="step-icon">👥</span><div><strong>Team-based</strong> — one shared account per team. Coordinate well.</div></div>
+          </div>
         </div>
-
-        <span class="badge"><span class="badge-dot"></span>Authenticated</span>
-
-        <h1>Get Ready to<br><span class="grad">Code.</span></h1>
-        <p class="subtitle">Your session is active. The round begins when the admin fires the signal.</p>
-
-        <div class="loader-wrap">
-            <div class="loader-label">
-                <span>INITIALIZING</span>
-                <span class="loader-pct" id="pct-text">standby</span>
-            </div>
-            <div class="loader-track">
-                <div class="loader-fill"></div>
-            </div>
+        <div class="tut-step" id="step-1">
+          <div class="step-chip">// Scoring System</div>
+          <div class="step-head">How Points Work</div>
+          <p class="step-desc">Speed matters as much as correctness. Solve early to maximize points.</p>
+          <div class="step-bullets">
+            <div class="step-bullet"><span class="step-icon">📉</span><div><strong>Time penalty</strong> — every 2 minutes elapsed reduces a problem's value by 1 point.</div></div>
+            <div class="step-bullet"><span class="step-icon">✅</span><div><strong>All test cases must pass</strong> — hidden tests judge your submission. No partial credit.</div></div>
+            <div class="step-bullet"><span class="step-icon">🔒</span><div><strong>First solve locks in</strong> — once solved, your score is frozen.</div></div>
+          </div>
         </div>
-
-        <div class="status-line">
-            <span id="status-msg">Waiting for admin to start</span>
-            <span class="cursor-blink"></span>
+        <div class="tut-step" id="step-2">
+          <div class="step-chip">// The Editor</div>
+          <div class="step-head">Writing Your Solution</div>
+          <p class="step-desc">Each problem has a built-in Python editor. Know these key facts.</p>
+          <div class="step-bullets">
+            <div class="step-bullet"><span class="step-icon">🐍</span><div><strong>Python only</strong> — no import statements allowed.</div></div>
+            <div class="step-bullet"><span class="step-icon">▶️</span><div><strong>RUN</strong> tests locally. <strong>SUBMIT</strong> runs hidden test cases for real points.</div></div>
+            <div class="step-bullet"><span class="step-icon">⚡</span><div><strong>Points decay</strong> — the longer you wait to solve, the fewer points you earn.</div></div>
+          </div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="info-grid">
-            <div class="info-box">
-                <div class="lbl">Event</div>
-                <div class="val blue">Round 2</div>
-            </div>
-            <div class="info-box">
-                <div class="lbl">Duration</div>
-                <div class="val">2 Hours</div>
-            </div>
-            <div class="info-box">
-                <div class="lbl">Status</div>
-                <div class="val green" id="live-status">Standby</div>
-            </div>
+        <div class="tut-step" id="step-3">
+          <div class="step-chip">// Pro Tips</div>
+          <div class="step-head">Win the Arena</div>
+          <p class="step-desc">Strategies that separate the top teams from the rest.</p>
+          <div class="step-bullets">
+            <div class="step-bullet"><span class="step-icon">🎯</span><div><strong>Start Easy</strong> — collect guaranteed points before time penalties compound.</div></div>
+            <div class="step-bullet"><span class="step-icon">⚡</span><div><strong>Watch for Bonus Rounds</strong> — a timed high-points challenge may appear mid-event.</div></div>
+            <div class="step-bullet"><span class="step-icon">👀</span><div><strong>Check the Leaderboard</strong> — know where you stand in real time.</div></div>
+          </div>
         </div>
+      </div>
+      <div class="tut-footer">
+        <span class="tut-step-n" id="tut-step-count">Step 1 of 4</span>
+        <div class="tut-btns">
+          <button class="tut-btn tut-btn-skip" id="tut-skip" onclick="closeTutorial()">Skip</button>
+          <button class="tut-btn tut-btn-next" id="tut-next" onclick="nextStep()">Next →</button>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<div class="footer">DIS HACKATHON • ARENA • 2026</div>
+  <div class="scene">
+    <div class="card" id="card">
+      <div class="logo-row">
+        <span class="logo-bracket">{ }</span>
+        <span class="logo-name">DIS Hackathon</span>
+      </div>
+      <div class="card-headline">Get Ready<br>to <span class="amber">Code.</span></div>
+      <p class="card-sub">Your session is active. The round begins when the admin fires the signal.</p>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="pct-label">Initializing</span>
+          <span class="pct" id="pct-text">standby</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
+      <div class="status-line">
+        <span id="status-msg">Waiting for admin to start</span>
+        <span class="cursor-blink"></span>
+      </div>
+      <div class="rule"></div>
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="lbl">Event</div>
+          <div class="val amber">Round 2</div>
+        </div>
+        <div class="info-cell">
+          <div class="lbl">Duration</div>
+          <div class="val">2 Hours</div>
+        </div>
+        <div class="info-cell">
+          <div class="lbl">Status</div>
+          <div class="val lime" id="live-status">Standby</div>
+        </div>
+      </div>
+      <button class="htp-btn" onclick="openTutorial()">
+        <span>📖</span> How does this work?
+      </button>
+    </div>
+    <div class="footprint">DIS Hackathon • Arena • 2026</div>
+  </div>
 
-<script>
-const canvas = document.getElementById('bg-canvas');
-const ctx = canvas.getContext('2d');
-let W, H;
-const mouse = { x: -9999, y: -9999 };
-
-function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-resize();
-window.addEventListener('resize', resize);
-
-const COUNT = 40;
-const particles = Array.from({ length: COUNT }, () => {
-    const bvx = (Math.random() - 0.5) * 0.3;
-    const bvy = (Math.random() - 0.5) * 0.3;
-    return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: bvx, vy: bvy, bvx, bvy, r: Math.random() * 1.4 + 0.5, hue: Math.random() > 0.5 ? 220 : 20 };
-});
-
-let ripples = [];
-document.addEventListener('click', e => { ripples.push({ x: e.clientX, y: e.clientY, r: 0, alpha: 0.6 }); });
-
-const cursorEl = document.getElementById('cursor');
-const cursorRing = document.getElementById('cursor-ring');
-let ringX = -9999, ringY = -9999;
-
-document.addEventListener('mousemove', e => {
-    mouse.x = e.clientX; mouse.y = e.clientY;
-    cursorEl.style.left = e.clientX + 'px';
-    cursorEl.style.top = e.clientY + 'px';
-});
-
-const card = document.getElementById('card').parentElement;
-document.addEventListener('mousemove', e => {
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (W / 2);
-    const dy = (e.clientY - cy) / (H / 2);
-    card.style.transform = `perspective(1200px) rotateY(${dx*4}deg) rotateX(${-dy*3}deg)`;
-});
-document.addEventListener('mouseleave', () => {
-    if (card) card.style.transform = '';
-    mouse.x = -9999; mouse.y = -9999;
-});
-
-function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    ringX += (mouse.x - ringX) * 0.1;
-    ringY += (mouse.y - ringY) * 0.1;
-    cursorRing.style.left = ringX + 'px';
-    cursorRing.style.top = ringY + 'px';
-
-    if (mouse.x > 0) {
-        const grd = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 200);
-        grd.addColorStop(0, 'rgba(91,143,255,0.05)');
-        grd.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, W, H);
-    }
-
-    ripples = ripples.filter(rp => rp.alpha > 0.02);
-    ripples.forEach(rp => {
-        rp.r += 4; rp.alpha *= 0.92;
-        ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(91,143,255,${rp.alpha})`; ctx.lineWidth = 1; ctx.stroke();
-    });
-
-    particles.forEach(p => {
-        const dx = p.x - mouse.x, dy = p.y - mouse.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 100 && dist > 0) { const force = (100 - dist) / 100; p.vx += (dx/dist)*force*0.9; p.vy += (dy/dist)*force*0.9; }
-        p.vx += (p.bvx - p.vx) * 0.03; p.vy += (p.bvy - p.vy) * 0.03;
-        const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-        if (spd > 3) { p.vx = p.vx/spd*3; p.vy = p.vy/spd*3; }
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        const near = dist < 180 ? Math.max(0, 1 - dist/180) : 0;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r + near*2, 0, Math.PI*2);
-        ctx.fillStyle = `hsla(${p.hue},70%,65%,${0.3 + near*0.5})`; ctx.fill();
-    });
-
-    for (let i = 0; i < particles.length; i++) {
-        for (let j = i+1; j < particles.length; j++) {
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d = Math.sqrt(dx*dx + dy*dy);
-            if (d < 90) {
-                ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                ctx.strokeStyle = `rgba(91,143,255,${(1-d/90)*0.15})`;
-                ctx.lineWidth = 0.5; ctx.stroke();
-            }
+  <script>
+    let isFinished = false;
+    const messages = [
+      'Waiting for admin to start',
+      'Loading problem set',
+      'Calibrating the judge',
+      'Systems nominal — standby',
+      'Almost time — stay sharp'
+    ];
+    const finishedMessages = ['Check the leaderboard for final standings'];
+    let msgIdx = 0;
+    const msgEl = document.getElementById('status-msg');
+    setInterval(() => {
+      msgEl.style.opacity = '0';
+      setTimeout(() => {
+        if (isFinished) {
+          msgIdx = (msgIdx + 1) % finishedMessages.length;
+          msgEl.textContent = finishedMessages[msgIdx];
+        } else {
+          msgIdx = (msgIdx + 1) % messages.length;
+          msgEl.textContent = messages[msgIdx];
         }
-    }
-    requestAnimationFrame(draw);
-}
-draw();
+        msgEl.style.opacity = '1';
+      }, 300);
+    }, 3500);
 
-// Status messages
-const messages = [
-    'Waiting for admin to start',
-    'Loading problem set',
-    'Calibrating the judge',
-    'Systems nominal — standby',
-    'Almost time — stay sharp',
-];
-let msgIdx = 0;
-const msgEl = document.getElementById('status-msg');
-setInterval(() => {
-    msgIdx = (msgIdx + 1) % messages.length;
-    msgEl.style.opacity = '0';
-    setTimeout(() => { msgEl.textContent = messages[msgIdx]; msgEl.style.opacity = '1'; }, 300);
-}, 3500);
-
-// Poll
-function checkStatus() {
-    fetch('/check-status/')
+    function checkStatus() {
+      fetch('/check-status/')
         .then(r => r.json())
         .then(data => {
-            if (data.is_live) {
-                document.getElementById('live-status').textContent = 'LIVE!';
-                document.getElementById('pct-text').textContent = 'launching...';
-                setTimeout(() => { window.location.href = '/home/'; }, 600);
-            }
-        })
-        .catch(() => {});
-}
-setInterval(checkStatus, 5000);
-</script>
+          if (data.is_finished) {
+            isFinished = true;
+            window.location.href = '/finished/';
+          } else if (data.is_live || data.tutorial_live) {
+            document.getElementById('live-status').textContent = 'LIVE!';
+            document.getElementById('pct-text').textContent = 'launching...';
+            setTimeout(() => { window.location.href = '/home/'; }, 600);
+          } else {
+            isFinished = false;
+            document.getElementById('live-status').textContent = 'Standby';
+            document.getElementById('pct-text').textContent = 'standby';
+            document.getElementById('pct-label').textContent = 'Initializing';
+          }
+        }).catch(() => {});
+    }
+    checkStatus();
+    setInterval(checkStatus, 5000);
+
+    // Tutorial
+    let currentStep = 0;
+    const totalSteps = 4;
+    function openTutorial() { document.getElementById('tutorial-overlay').classList.remove('hidden'); currentStep = 0; renderStep(); }
+    function closeTutorial() { document.getElementById('tutorial-overlay').classList.add('hidden'); }
+    function nextStep() { if (currentStep < totalSteps - 1) { currentStep++; renderStep(); } else closeTutorial(); }
+    function renderStep() {
+      document.querySelectorAll('.tut-step').forEach((el, i) => el.classList.toggle('active', i === currentStep));
+      for (let i = 0; i < totalSteps; i++) {
+        const d = document.getElementById('tp-' + i);
+        d.className = 'tprog';
+        if (i < currentStep) d.classList.add('done');
+        else if (i === currentStep) d.classList.add('active');
+      }
+      document.getElementById('tut-step-count').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+      document.getElementById('tut-next').textContent = currentStep === totalSteps - 1 ? "Let's Go →" : 'Next →';
+      document.getElementById('tut-skip').textContent = currentStep === totalSteps - 1 ? 'Close' : 'Skip tour';
+    }
+
+    // WebGL background
+    (function () {
+      const canvas = document.getElementById('bg-canvas');
+      const gl = canvas.getContext('webgl');
+      if (!gl) return;
+      const vsrc = `attribute vec2 a_pos; void main(){gl_Position=vec4(a_pos,0.0,1.0);}`;
+      const fsrc = `#ifdef GL_ES
+        precision mediump float;
+        #endif
+        uniform vec2 u_res; uniform vec2 u_mouse; uniform float u_time;
+        float threadGrid(vec2 p){
+        float r=length(p),a=atan(p.y,p.x);
+        float aBent=a*1.2;
+        float grid=abs(fract(aBent/6.28318*30.0)-0.5)*1.5;
+        float width=0.9-0.5*r;
+        float line=smoothstep(width,1.0,grid);
+        line*=smoothstep(5.0,1.5,r);
+        return line;
+      }
+      void main(){
+        vec2 st=gl_FragCoord.xy/u_res.xy*2.0-1.0;
+        st.x*=u_res.x/u_res.y;
+        float t=u_time; st*=3.0;
+        float angle=atan(st.y,st.x);
+        float phase=t*0.1;
+        float ripple=sin(phase*10.0+angle*2.0)*0.5+0.5;
+        ripple+=sin(length(st)*5.0-t);
+        float threads=threadGrid(st);
+        vec3 colA=vec3(0.702,0.294,0.957);
+        vec3 colB=vec3(0.882,0.188,0.424);
+        vec3 colC=vec3(1.0,0.478,0.0);
+        vec3 col=mix(colA,colB,clamp(ripple*0.5,0.0,1.0));
+        col=mix(col,colC,clamp(threads*ripple*0.3,0.0,1.0));
+        float brightness=ripple*0.18*(threads*(ripple*8.0))*0.22;
+        gl_FragColor=vec4(col*brightness*3.0,1.0);
+      }`;
+      function mkShader(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+      const prog = gl.createProgram();
+      gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, vsrc));
+      gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, fsrc));
+      gl.linkProgram(prog); gl.useProgram(prog);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'a_pos');
+      gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const uRes = gl.getUniformLocation(prog, 'u_res');
+      const uTime = gl.getUniformLocation(prog, 'u_time');
+      const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+      let mx = 0, my = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      }
+      resize(); window.addEventListener('resize', resize);
+      function render(ts) {
+        gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.uniform1f(uTime, ts * 0.001);
+        gl.uniform2f(uMouse, mx, my);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    })();
+
+    // Bonus toast
+    (function(){
+      let toastEl = null, wasActive = false;
+      async function checkBonus() {
+        try {
+          const r = await fetch('/api/bonus/status/');
+          const d = await r.json();
+          if (d.available && !wasActive) {
+            if (toastEl) return;
+            wasActive = true;
+            const a = document.createElement('a');
+            a.href = '/home/';
+            a.className = 'bonus-global-toast';
+            const m = Math.floor((d.time_remaining_seconds||120)/60), s = (d.time_remaining_seconds||120)%60;
+            a.innerHTML = `
+              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#fec053,#f47b20,#d62976,#962fbf);"></div>
+              <div class="bgt-icon">⚡</div>
+              <div style="flex:1">
+                <div class="bgt-title ig-gradient-text">Bonus Round Active!</div>
+                <div class="bgt-sub">${d.title||'Bonus'} — ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} left</div>
+              </div>
+              <div class="bgt-cta">Enter →</div>
+            `;
+            document.body.appendChild(a);
+            toastEl = a;
+            setTimeout(() => { if(toastEl){toastEl.classList.add('out');setTimeout(()=>{if(toastEl){toastEl.remove();toastEl=null;}},350);} }, 10000);
+          } else if (!d.available) {
+            wasActive = false;
+            if (toastEl) { toastEl.classList.add('out'); setTimeout(()=>{if(toastEl){toastEl.remove();toastEl=null;}},350); }
+          }
+        } catch(e) {}
+      }
+      checkBonus();
+      setInterval(checkBonus, 5000);
+    })();
+  </script>
 </body>
 </html>

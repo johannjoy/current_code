@@ -1,507 +1,687 @@
-<html class="dark" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>{{ problem.title }} | DIS HACKATHON</title>
-    
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-
-    <style>
-        :root {
-            --bg: #0d0f1a;
-            --surface: #161a2c;
-            --border: rgba(255, 255, 255, 0.08);
-            --primary: #6c8cff;
-            --accent: #ff8a4c;
-            --success: #4ade80;
-            --grad-primary: linear-gradient(135deg, #6c8cff, #ff8a4c);
-        }
-
-        body {
-            background-color: var(--bg);
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-        }
-
-        .glass-panel {
-            background: linear-gradient(135deg, rgba(29, 34, 56, 0.6), rgba(22, 26, 44, 0.4));
-            backdrop-filter: blur(24px);
-            border: 1px solid var(--border);
-            box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
-        }
-
-        .text-grad {
-            background: var(--grad-primary);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        /* Animated Blobs */
-        .blob { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.2; z-index: -1; animation: float 16s ease-in-out infinite; }
-        .blob-1 { width: 400px; height: 400px; top: -100px; left: -100px; background: var(--primary); }
-        .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: var(--accent); }
-        @keyframes float { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(30px, -30px); } }
-
-        /* CodeMirror Customization */
-        .CodeMirror { height: 100% !important; background: transparent !important; font-family: 'JetBrains Mono', monospace; font-size: 14px; }
-        .CodeMirror-gutters { background: transparent !important; border-right: 1px solid var(--border) !important; }
-        
-        .nav-btn {
-            background: rgba(29, 34, 56, 0.6);
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-        .nav-btn:hover { border-color: var(--primary); background: #1d2238; }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        .CodeMirror {
-    height: 100% !important;
-    overflow: auto !important;
-}
-.save-load-group {
-    display: flex;
-    gap: 4px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 3px;
-}
-
-.hdr-btn {
-    padding: 6px 14px;
-    border-radius: 7px;
-    border: none;
-    background: transparent;
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.hdr-btn:hover {
-    background: rgba(255,255,255,0.08);
-}
-.score-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-
-    padding: 6px 14px;
-    border-radius: 10px;
-
-    background: rgba(74,222,128,0.06);
-    border: 1px solid rgba(74,222,128,0.15);
-}
-
-.score-label-sm {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-}
-
-.score-value {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--success);
-    line-height: 1;
-}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ problem.title }} | DIS Hackathon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <style>
+    :root {
+      --ink:#07050b; --ink-1:#0e0a16; --ink-2:#161122; --ink-3:#221a33;
+      --wire:rgba(179,75,244,0.08); --wire-bright:rgba(179,75,244,0.18);
+      --amber:#b34bf4; --amber-dim:rgba(179,75,244,0.12);
+      --lime:#e1306c; --lime-dim:rgba(225,48,108,0.12);
+      --fog:#8b8599; --text:#e2dfe6; --danger:#ff5577; --run-green:#3cd070;
+      --cyber-cyan:#b34bf4; --cyber-orange:#ff7a00;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{height:100%;background:var(--ink);color:var(--text);overflow:hidden;}
+    body{font-family:'DM Mono',monospace;}
+    .blob{position:fixed;border-radius:50%;filter:blur(130px);opacity:0.12;z-index:0;animation:floatBlob 18s ease-in-out infinite;pointer-events:none;}
+    .blob-1{width:440px;height:440px;top:-120px;left:-120px;background:var(--amber);}
+    .blob-2{width:360px;height:360px;bottom:-100px;right:-100px;background:var(--lime);animation-direction:reverse;animation-duration:22s;}
+    @keyframes floatBlob{0%,100%{transform:translate(0,0)}50%{transform:translate(24px,-24px)}}
+    header{position:relative;z-index:50;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--wire);background:rgba(10,10,11,0.95);backdrop-filter:blur(12px);flex-shrink:0;}
+    .nav-brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit;}
+    .nav-bracket{font-size:16px;color:var(--cyber-orange);}
+    .nav-name{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fog);}
+    .nav-links{display:flex;align-items:center;gap:3px;}
+    .nav-link{padding:5px 11px;border-radius:8px;border:1px solid transparent;font-size:11px;color:var(--fog);text-decoration:none;transition:all 0.2s;background:none;cursor:pointer;font-family:'DM Mono',monospace;}
+    .nav-link:hover{color:var(--text);border-color:var(--wire-bright);}
+    .save-load-group{display:flex;gap:3px;background:var(--ink-2);border:1px solid var(--wire);border-radius:10px;padding:2px;}
+    .hdr-btn{padding:5px 12px;border-radius:8px;border:none;background:transparent;color:var(--fog);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-family:'DM Mono',monospace;}
+    .hdr-btn:hover{background:rgba(255,255,255,0.07);color:var(--text);}
+    .sep{width:1px;background:var(--wire);margin:0 8px;}
+    .score-chip{display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:5px 12px;border-radius:10px;background:var(--lime-dim);border:1px solid rgba(225,48,108,0.2);}
+    .score-chip .lbl{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--fog);}
+    .score-chip .val{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.05em;color:var(--lime);line-height:1;}
+    .workspace{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);position:relative;z-index:10;gap:12px;padding:12px;}
+    @media(max-width:900px){.workspace{grid-template-columns:1fr;}}
+    .problem-panel{background:var(--ink-1);border:1px solid var(--wire);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;}
+    .problem-scroll{flex:1;overflow-y:auto;padding:24px 22px;}
+    .problem-scroll::-webkit-scrollbar{width:4px;}
+    .problem-scroll::-webkit-scrollbar-thumb{background:var(--wire-bright);border-radius:999px;}
+    .prob-meta{display:flex;align-items:center;gap:7px;margin-bottom:14px;}
+    .diff-tag{padding:3px 9px;border-radius:8px;font-size:10px;font-weight:500;letter-spacing:0.06em;}
+    .diff-easy{background:var(--lime-dim);color:var(--lime);border:1px solid rgba(225,48,108,0.2);}
+    .diff-medium{background:rgba(255,122,0,0.1);color:#ff7a00;border:1px solid rgba(255,122,0,0.2);}
+    .diff-hard{background:rgba(255,0,85,0.08);color:#ff3b70;border:1px solid rgba(255,0,85,0.2);}
+    .prob-id{font-size:11px;color:var(--fog);}
+    @keyframes gradShift{0%{background-position:0% center}100%{background-position:200% center}}
+    .prob-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.02em;line-height:1.2;margin-bottom:18px;background:linear-gradient(90deg,var(--cyber-cyan),var(--cyber-orange),var(--lime),var(--cyber-cyan));background-size:200% auto;-webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;display:inline-block;animation:gradShift 4s linear infinite;}
+    .prob-section-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fog);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--wire);}
+    .prob-desc{font-size:12px;color:var(--fog);line-height:1.75;}
+    .prob-desc p{margin-bottom:10px;}
+    .examples-box{margin-top:20px;background:rgba(0,0,0,0.25);border:1px solid var(--wire);border-radius:12px;padding:14px;}
+    .examples-box pre{font-family:'DM Mono',monospace;font-size:12px;color:rgba(255,255,255,0.7);white-space:pre-wrap;line-height:1.65;}
+    .action-strip{flex-shrink:0;padding:12px 16px;border-top:1px solid var(--wire);background:var(--ink-2);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .timer-block{display:flex;flex-direction:column;gap:4px;flex:1;max-width:140px;}
+    .timer-lbl{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--fog);}
+    .timer-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.05em;color:var(--amber);}
+    .hint-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;background:var(--amber-dim);border:1px solid rgba(179,75,244,0.2);color:var(--amber);font-size:11px;cursor:pointer;transition:all 0.2s;font-family:'DM Mono',monospace;}
+    .hint-btn:hover{background:rgba(179,75,244,0.18);border-color:rgba(179,75,244,0.4);}
+    .editor-panel{display:flex;flex-direction:column;overflow:hidden;border-radius:12px;border:1px solid var(--wire);}
+    .editor-topbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--wire);background:rgba(0,0,0,0.2);flex-shrink:0;border-radius:12px 12px 0 0;}
+    .editor-title{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--fog);}
+    .editor-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);}
+    .editor-actions{display:flex;gap:6px;}
+    .run-btn,.submit-btn{padding:5px 14px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;}
+    .run-btn{background:var(--ink-3);color:var(--run-green);border:1px solid rgba(79,222,158,0.2);}
+    .run-btn:hover{background:rgba(79,222,158,0.08);}
+    .submit-btn{background:linear-gradient(135deg,var(--cyber-cyan),var(--lime));color:#fff;font-weight:800;}
+    .submit-btn:hover{opacity:0.95;box-shadow:0 4px 12px rgba(225,48,108,0.25);}
+    .editor-wrap{flex:1;position:relative;overflow:hidden;min-height:0;}
+    .editor-wrap .CodeMirror{position:absolute;inset:0;height:100% !important;width:100%;}
+    .cm-s-arena.CodeMirror{background:#0d0d10;color:#c8c8d0;font-family:'DM Mono',monospace;font-size:13px;line-height:1.65;height:100% !important;}
+    .cm-s-arena .CodeMirror-gutters{background:#0a0a0d;border-right:1px solid rgba(255,255,255,0.07);padding-right:4px;min-width:42px;}
+    .cm-s-arena .CodeMirror-linenumber{color:#3a3a46;font-size:11px;padding:0 6px 0 4px;}
+    .cm-s-arena .CodeMirror-cursor{border-left:2px solid var(--cyber-cyan);}
+    .cm-s-arena .CodeMirror-selected,.cm-s-arena .CodeMirror-focused .CodeMirror-selected{background:rgba(179,75,244,0.15);}
+    .cm-s-arena .CodeMirror-matchingbracket{color:var(--cyber-cyan) !important;background:rgba(179,75,244,0.2);border-radius:2px;}
+    .cm-s-arena .CodeMirror-activeline-background{background:rgba(255,255,255,0.025);}
+    .cm-s-arena .CodeMirror-scroll{overflow:auto !important;}
+    .cm-s-arena .cm-keyword{color:#e1306c;}
+    .cm-s-arena .cm-builtin{color:#d6a4ff;}
+    .cm-s-arena .cm-def{color:#ff7a00;}
+    .cm-s-arena .cm-string,.cm-s-arena .cm-string-2{color:#7ce6a1;}
+    .cm-s-arena .cm-number{color:#ff5577;}
+    .cm-s-arena .cm-comment{color:#4a4a58;font-style:italic;}
+    .cm-s-arena .cm-operator{color:#c8c8d0;}
+    .cm-s-arena .cm-variable{color:#c8c8d0;}
+    .cm-s-arena .cm-variable-2{color:#b0b0c0;}
+    .cm-s-arena .cm-property{color:#a8d8ff;}
+    .cm-s-arena .cm-atom{color:#b34bf4;}
+    .cm-s-arena .cm-error{color:#ff5577;background:rgba(255,0,85,0.12);border-radius:2px;}
+    .output-panel{flex-shrink:0;height:170px;display:flex;flex-direction:column;border-top:1px solid var(--wire);background:rgba(0,0,0,0.25);position:relative;border-radius:0 0 12px 12px;overflow:hidden;}
+    .terminal-resizer{position:absolute;top:-3px;left:0;right:0;height:6px;cursor:ns-resize;z-index:100;}
+    .output-topbar{height:36px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--wire);gap:7px;}
+    .output-pip{width:5px;height:5px;border-radius:50%;background:var(--lime);}
+    .output-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fog);}
+    #statusMsg{margin-left:auto;font-size:9px;color:var(--fog);}
+    .output-body{flex:1;overflow-y:auto;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--fog);}
+    .output-body::-webkit-scrollbar{width:3px;}
+    .output-body::-webkit-scrollbar-thumb{background:var(--wire-bright);border-radius:999px;}
+    /* AI Hint panel */
+    #ai-hint-overlay{position:fixed;inset:0;z-index:899;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);display:none;}
+    #ai-hint-overlay.open{display:block;}
+    #ai-hint-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;z-index:900;transition:right 0.38s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;background:var(--ink-1);border-left:1px solid rgba(179,75,244,0.18);box-shadow:-20px 0 60px rgba(0,0,0,0.7);}
+    #ai-hint-panel.open{right:0;}
+    .hint-header{padding:18px 18px 14px;flex-shrink:0;border-bottom:1px solid var(--wire);display:flex;align-items:center;justify-content:space-between;}
+    .hint-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.05em;display:flex;align-items:center;gap:8px;}
+    .hint-badge{font-size:10px;color:var(--amber);letter-spacing:0.1em;font-family:'DM Mono',monospace;}
+    .hint-close{width:28px;height:28px;border-radius:8px;border:1px solid var(--wire-bright);background:var(--ink-2);color:var(--fog);font-size:14px;cursor:pointer;display:grid;place-items:center;transition:all 0.2s;}
+    .hint-close:hover{background:var(--ink-3);color:var(--text);}
+    .hint-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
+    .hint-how{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--fog);}
+    .hint-how-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7;background:var(--ink-2);border:1px solid var(--wire);border-radius:10px;padding:11px 13px;}
+    .hint-resp-label{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--fog);}
+    .hint-box{background:var(--amber-dim);border:1px solid rgba(179,75,244,0.18);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;color:rgba(225,180,255,0.88);min-height:110px;}
+    .hint-idle{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;}
+    .hint-dots{display:flex;align-items:center;gap:4px;}
+    .hint-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:hintBounce 1.2s ease-in-out infinite;}
+    .hint-dot:nth-child(2){animation-delay:0.2s;}
+    .hint-dot:nth-child(3){animation-delay:0.4s;}
+    @keyframes hintBounce{0%,80%,100%{transform:scale(0.7);opacity:0.4}40%{transform:scale(1.2);opacity:1}}
+    .hint-ask-btn{width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--cyber-cyan),var(--lime));color:#fff;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;transition:opacity 0.2s;font-weight:800;}
+    .hint-ask-btn:hover{opacity:0.85;}
+    .hint-ask-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .hint-disclaimer{font-size:11px;color:var(--fog);text-align:center;line-height:1.6;}
+    /* Tour */
+    #tour-backdrop{position:fixed;inset:0;z-index:8000;pointer-events:none;background:rgba(0,0,0,0);transition:background 0.35s;}
+    #tour-backdrop.active{background:rgba(0,0,0,0.72);pointer-events:all;}
+    .tour-spotlight{position:fixed;z-index:8001;pointer-events:none;border-radius:5px;box-shadow:0 0 0 4px var(--cyber-orange),0 0 0 8px rgba(255,122,0,0.18);transition:all 0.38s cubic-bezier(0.16,1,0.3,1);}
+    .tour-bubble{position:fixed;z-index:8002;pointer-events:all;width:272px;background:var(--ink-1);border:1px solid rgba(255,122,0,0.35);border-radius:12px;box-shadow:0 20px 56px rgba(0,0,0,0.85);padding:18px 18px 14px;transition:left 0.38s cubic-bezier(0.16,1,0.3,1),top 0.38s cubic-bezier(0.16,1,0.3,1);animation:bubbleIn 0.38s cubic-bezier(0.16,1,0.3,1);}
+    @keyframes bubbleIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+    .tour-bubble::before{content:'';position:absolute;width:0;height:0;}
+    .tour-bubble.arrow-left::before{right:100%;top:22px;border:8px solid transparent;border-right-color:rgba(255,122,0,0.35);}
+    .tour-bubble.arrow-right::before{left:100%;top:22px;border:8px solid transparent;border-left-color:rgba(255,122,0,0.35);}
+    .tour-bubble.arrow-top::before{bottom:100%;left:24px;border:8px solid transparent;border-bottom-color:rgba(255,122,0,0.35);}
+    .tour-bubble.arrow-bottom::before{top:100%;left:24px;border:8px solid transparent;border-top-color:rgba(255,122,0,0.35);}
+    .tour-step-chip{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:7px;display:block;}
+    .tour-bubble-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:0.04em;color:var(--text);margin-bottom:5px;}
+    .tour-bubble-desc{font-size:12px;color:var(--fog);line-height:1.65;margin-bottom:14px;}
+    .tour-progress{display:flex;gap:3px;margin-bottom:12px;}
+    .tour-pip{flex:1;height:2px;border-radius:999px;background:rgba(255,255,255,0.08);transition:background 0.25s;}
+    .tour-pip.done{background:var(--lime);}
+    .tour-pip.active{background:var(--amber);}
+    .tour-footer{display:flex;justify-content:space-between;align-items:center;}
+    .tour-skip-btn{font-size:11px;color:var(--fog);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s;font-family:'DM Mono',monospace;}
+    .tour-skip-btn:hover{color:var(--text);}
+    .tour-next-btn{padding:6px 16px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--cyber-cyan),var(--lime));color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;transition:opacity 0.15s;font-weight:800;}
+    .tour-next-btn:hover{opacity:0.85;}
+    .tour-launch-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1px solid var(--wire-bright);background:transparent;color:var(--fog);font-size:11px;cursor:pointer;transition:all 0.2s;font-family:'DM Mono',monospace;}
+    .tour-launch-btn:hover{color:var(--cyber-orange);border-color:rgba(255,122,0,0.4);}
+    /* Tab warning */
+    @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+    /* Bonus toast */
+    .bonus-global-toast{position:fixed;bottom:28px;right:28px;z-index:99999;background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(14,10,22,0.7) 100%);border:1px solid rgba(255,255,255,0.15);border-top:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:18px 22px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(30px);max-width:340px;cursor:pointer;animation:bonusToastIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;text-decoration:none;overflow:hidden;}
+    @keyframes bonusToastIn{from{opacity:0;transform:translateX(40px) scale(0.92)}to{opacity:1;transform:translateX(0) scale(1)}}
+    .bonus-global-toast.out{animation:bonusToastOut 0.35s ease-in forwards;}
+    @keyframes bonusToastOut{to{opacity:0;transform:translateX(40px) scale(0.9)}}
+    .bgt-icon{width:42px;height:42px;border-radius:12px;flex-shrink:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;}
+    .bgt-title{font-weight:800;font-size:13px;margin-bottom:2px;background:linear-gradient(90deg,#b34bf4,#e1306c,#ff7a00,#b34bf4);background-size:200% auto;-webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;animation:gradShift 4s linear infinite;}
+    .bgt-sub{font-size:11px;color:var(--fog);}
+    .bgt-cta{font-size:10px;color:#fff;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;background:rgba(255,255,255,0.06);white-space:nowrap;}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-thumb{background:var(--wire-bright);border-radius:999px;}
+    /* Rank overtake toast */
+    #rank-toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-12px);z-index:9000;
+      background:linear-gradient(135deg,rgba(14,10,22,0.94) 0%,rgba(22,17,34,0.97) 100%);
+      border:1px solid rgba(255,85,119,0.35);border-top:1px solid rgba(255,85,119,0.55);
+      border-radius:12px;padding:12px 16px 12px 14px;display:flex;align-items:center;gap:11px;
+      backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 0 1px rgba(255,85,119,0.08);
+      opacity:0;pointer-events:none;transition:opacity 0.25s ease,transform 0.25s ease;min-width:260px;max-width:340px;}
+    #rank-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all;}
+    .rt-icon{font-size:18px;flex-shrink:0;}
+    .rt-text{flex:1;}
+    .rt-title{font-size:12px;font-weight:700;color:var(--danger);letter-spacing:0.04em;margin-bottom:2px;}
+    .rt-sub{font-size:11px;color:var(--fog);}
+    .rt-close{background:none;border:none;color:var(--fog);font-size:14px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0;transition:color 0.15s;}
+    .rt-close:hover{color:var(--text);}
+  </style>
 </head>
-
-<body class="text-white">
-
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-
-    <header class="h-16 flex items-center justify-between px-8 border-b border-white/10 backdrop-blur-md sticky top-0 z-50">
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-2 font-['Space_Grotesk'] font-bold text-lg">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="border: 1.5px solid rgba(108,140,255,0.5);">
-    <svg viewBox="0 0 22 22" fill="none" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-        <polyline points="8,4 2,11 8,18" stroke="#5b8fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <polyline points="14,4 20,11 14,18" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-</div>
-                <span>DIS<span class="text-grad"> HACKATHON</span></span>
-            </div>
-            <nav class="hidden md:flex gap-6">
-                <a href="/home/" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Problems</a>
-                <a href="/leaderboard/" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Leaderboard</a>
-            </nav>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <div class="save-load-group">
-    <button onclick="saveCode()" class="hdr-btn">Save</button>
-    <button onclick="loadCode()" class="hdr-btn">Load</button>
-</div>
-            <div class="h-8 w-[1px] bg-white/10 mx-2"></div>
-
-<div class="score-display">
-    <div class="score-label-sm">Team Score</div>
-    <div class="score-value" id="nav-total-score">{{ total_score }} pts</div>
-</div>
-        </div>
-    </header>
-
-    <main class="h-[calc(100vh-64px)] p-6 grid grid-cols-12 gap-6">
-        
-        <section class="col-span-12 lg:col-span-4 flex flex-col gap-6 overflow-hidden">
-            <div class="glass-panel rounded-[24px] p-6 flex-1 overflow-y-auto">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-md uppercase border border-blue-500/20">
-                                {{ problem.difficulty|default:"Medium" }}
-                            </span>
-                            <span class="text-slate-500 text-xs font-mono">#{{ problem.id }}</span>
-                        </div>
-                        <h1 class="text-2xl font-['Space_Grotesk'] font-extrabold text-white">{{ problem.title }}</h1>
-                    </div>
-                </div>
-
-                <div class="prose prose-invert max-w-none text-slate-400 text-sm leading-relaxed">
-    <h3 class="text-white font-bold flex items-center gap-2 mb-4">
-        <span class="material-symbols-outlined text-blue-400">subject</span>
-        Problem Brief
-    </h3>
-
-    {{ problem.description|linebreaks }}
-
-    {% if problem.examples %}
-    <div class="mt-8">
-        <h3 class="text-white font-bold flex items-center gap-2 mb-4">
-            <span class="material-symbols-outlined text-orange-400">terminal</span>
-            Examples
-        </h3>
-
-        <div class="bg-black/30 border border-white/10 rounded-2xl p-4">
-            <pre class="text-sm text-slate-300 font-mono whitespace-pre-wrap leading-7">{{ problem.examples }}</pre>
-        </div>
+<body>
+  <!-- Rank overtake toast -->
+  <div id="rank-toast">
+    <span class="rt-icon">📉</span>
+    <div class="rt-text">
+      <div class="rt-title">You've been overtaken!</div>
+      <div class="rt-sub" id="rt-sub-text">Someone just passed you on the leaderboard.</div>
     </div>
-    {% endif %}
-</div>
-            </div>
+    <button class="rt-close" onclick="document.getElementById('rank-toast').classList.remove('show')">✕</button>
+  </div>
 
-            <div class="glass-panel rounded-[24px] p-5 flex items-center justify-between border-l-4 border-l-[var(--accent)]">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-[var(--accent)]">
-                        <span class="material-symbols-outlined">timer</span>
-                    </div>
-                    <div>
-                        <div class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Time Remaining</div>
-                        <div id="problem-timer" class="text-lg font-['Space_Grotesk'] font-bold text-white">00:00:00</div>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
 
-        <section class="col-span-12 lg:col-span-8 flex flex-col gap-6 min-h-0">
-            
-            <div class="glass-panel rounded-[24px] flex-[2] flex flex-col overflow-hidden">
-                <div class="h-12 flex justify-between items-center px-4 bg-black/20 border-b border-white/5">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm text-slate-500">code</span>
-                        <span class="text-xs font-mono font-bold text-slate-300">solution.py</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="runCode()" class="px-4 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-all">RUN</button>
-                        <button onclick="submitCode()" 
-class="px-4 py-1 rounded-lg bg-white text-black hover:bg-blue-400 text-xs font-bold transition-all shadow-lg flex items-center gap-1">
-    
-    <span class="material-symbols-outlined text-sm">rocket_launch</span>
-    SUBMIT
-</button>
-                    </div>
-                </div>
-                
-                <div class="flex-1 flex overflow-hidden min-h-0">
+  <header>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <a href="/home/" class="nav-brand">
+        <span class="nav-bracket">{ }</span>
+        <span class="nav-name">DIS Hackathon</span>
+      </a>
+      <div class="nav-links">
+        <a href="/home/" class="nav-link">Problems</a>
+        <a href="/leaderboard/" class="nav-link">Leaderboard</a>
+        <button onclick="startTour()" class="tour-launch-btn" id="tour-launch-btn">❓ Tour</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="save-load-group">
+        <button onclick="saveCode()" class="hdr-btn">Save</button>
+        <button onclick="loadCode()" class="hdr-btn">Load</button>
+        <button onclick="resetCode()" class="hdr-btn">Reset</button>
+      </div>
+      <div class="sep"></div>
+      <div class="score-chip">
+        <span class="lbl">Team Score</span>
+        <span class="val" id="nav-total-score">{{ total_score }} pts</span>
+      </div>
+    </div>
+  </header>
 
-    <!-- Line Numbers -->
-    <div id="line-numbers"
-        class="w-12 bg-[#050505]/30 flex flex-col items-end pr-2 py-1 font-mono text-[14px] text-slate-600 select-none border-r border-white/5 overflow-hidden">
+  <div class="workspace">
+    <!-- Problem panel -->
+    <div class="problem-panel">
+      <div class="problem-scroll">
+        <div class="prob-meta">
+          <span class="diff-tag {% if problem.difficulty == 'Easy' %}diff-easy{% elif problem.difficulty == 'Medium' %}diff-medium{% else %}diff-hard{% endif %}">{{ problem.difficulty|default:"Medium" }}</span>
+          <span class="prob-id">#{{ problem.id }}</span>
+        </div>
+        <h1 class="prob-title">{{ problem.title }}</h1>
+        <div class="prob-section-label">// Problem</div>
+        <div class="prob-desc">{{ problem.description|linebreaks }}</div>
+        {% if problem.examples %}
+        <div class="examples-box" style="margin-top:18px;">
+          <div class="prob-section-label" style="margin-bottom:10px;">// Examples</div>
+          <pre>{{ problem.examples }}</pre>
+        </div>
+        {% endif %}
+      </div>
+      <div class="action-strip" id="tour-action-strip">
+        <div class="timer-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span class="timer-lbl">Time Remaining</span>
+            <div class="timer-val" id="problem-timer">00:00:00</div>
+          </div>
+          <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:999px;overflow:hidden;width:100%;">
+            <div id="timer-progress-fill" style="height:100%;width:100%;background:linear-gradient(90deg,#b34bf4,#e1306c 50%,#ff7a00);border-radius:999px;transition:width 1s linear;"></div>
+          </div>
+        </div>
+        <button onclick="openHintPanel()" class="hint-btn" id="hint-btn">💡 AI Hint</button>
+      </div>
     </div>
 
-    <!-- Editor -->
-    <div class="flex-1 relative min-h-0 overflow-hidden">
+    <!-- Editor panel -->
+    <div class="editor-panel">
+      <div class="editor-topbar" id="tour-editor-topbar">
+        <div class="editor-title">
+          <span class="editor-dot"></span>
+          <span>solution.py</span>
+        </div>
+        <div class="editor-actions" id="tour-run-submit">
+          <button onclick="runCode()" class="run-btn" id="run-btn">▶ Run</button>
+          <button onclick="submitCode()" class="submit-btn" id="submit-btn">↑ Submit</button>
+        </div>
+      </div>
+      <div class="editor-wrap">
         <textarea id="code-editor">{{ progress.current_code }}</textarea>
+      </div>
+      <div class="output-panel" id="tour-output-panel">
+        <div class="terminal-resizer" id="terminal-resizer"></div>
+        <div class="output-topbar">
+          <span class="output-pip"></span>
+          <span class="output-label">Terminal Output</span>
+          <span id="statusMsg"></span>
+        </div>
+        <div class="output-body" id="output">
+          <span style="color:var(--fog);">Waiting for execution...</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-</div>
-            </div>
+  <!-- Tour elements -->
+  <div id="tour-backdrop"></div>
+  <div id="tour-spotlight" class="tour-spotlight" style="display:none;"></div>
+  <div id="tour-bubble" class="tour-bubble" style="display:none;"></div>
 
-            <div class="glass-panel rounded-[24px] flex-1 flex flex-col overflow-hidden bg-black/40">
-                <div class="h-10 flex items-center px-4 border-b border-white/5">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <div class="w-1.5 h-1.5 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)]"></div>
-                        Terminal Output
-                    </span>
-                    <span id="statusMsg" class="ml-auto text-[10px] font-mono text-slate-600"></span>
-                </div>
-                <div class="flex-1 p-4 font-mono text-sm overflow-y-auto" id="output">
-                    <span class="text-slate-600">Waiting for execution...</span>
-                </div>
-            </div>
-        </section>
-    </main>
+  <!-- AI Hint panel -->
+  <div id="ai-hint-overlay" onclick="closeHintPanel()"></div>
+  <div id="ai-hint-panel">
+    <div class="hint-header">
+      <div class="hint-title">AI Hint <span class="hint-badge">// nudge mode</span></div>
+      <button class="hint-close" onclick="closeHintPanel()">✕</button>
+    </div>
+    <div class="hint-body">
+      <div class="hint-how">How it works</div>
+      <div class="hint-how-desc">The AI reads your current code and the problem description, then gives you a nudge toward the solution — without spoiling it.</div>
+      <div class="hint-resp-label">AI Response</div>
+      <div class="hint-box" id="hint-text-box">
+        <div class="hint-idle" id="hint-idle">
+          <span style="font-size:28px;">🤔</span>
+          <span style="font-size:12px;color:var(--fog);">Click below to get a hint</span>
+        </div>
+        <div style="display:none;" id="hint-loading">
+          <div class="hint-dots"><span class="hint-dot"></span><span class="hint-dot"></span><span class="hint-dot"></span></div>
+          <span style="font-size:12px;color:var(--fog);margin-left:8px;">Thinking...</span>
+        </div>
+        <div id="hint-content" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.7;"></div>
+      </div>
+      <button class="hint-ask-btn" id="hint-ask-btn" onclick="fetchHint()">✨ Get AI Hint</button>
+      <div class="hint-disclaimer">Hints guide your thinking — they don't give away the solution.</div>
+    </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
-    <script>
-        const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
-    mode:"python",
-    theme:"dracula",
-    lineNumbers:false,
-    indentUnit:4,
-    tabSize:4,
-    lineWrapping:true,
-    extraKeys: {
-        "Tab": (cm) => cm.execCommand("indentMore"),
-        "Shift-Tab": (cm) => cm.execCommand("indentLess"),
-        "Enter": "newlineAndIndentContinueComment"
-    },
-    autoCloseBrackets: true,
-    matchBrackets: true,
-});
-        let lastLineCount = 0;
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
 
-        
-function updateLineNumbers() {
-    const count = editor.lineCount();
-    if (count === lastLineCount) return;
-
-    lastLineCount = count;
-
-    let linesHTML = "";
-    for (let i = 1; i <= count; i++) {
-        linesHTML += `<span>${i}</span>`;
-    }
-
-    document.getElementById("line-numbers").innerHTML = linesHTML;
-}
-
-// update on load
-updateLineNumbers();
-
-// update when typing
-editor.on("change", updateLineNumbers);
-const statusMsg = document.getElementById("statusMsg");
-const outputDiv = document.getElementById("output");
-const problemId = "{{ problem.id }}";
-editor.on("scroll", () => {
-    const info = editor.getScrollInfo();
-    document.getElementById("line-numbers").scrollTop = info.top;
-});
-// Disable copy/paste/cut
-editor.on("copy", (cm, e) => { e.preventDefault(); });
-editor.on("paste", (cm, e) => { e.preventDefault(); });
-editor.on("cut", (cm, e) => { e.preventDefault(); });
-
-// Block keyboard shortcuts too
-editor.on("keydown", (cm, e) => {
-    const isCtrl = e.ctrlKey || e.metaKey;
-    if (isCtrl && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
-        e.preventDefault();
-    }
-});
-async function saveCode(){
-    statusMsg.innerText = "Saving...";
-
-    try {
-        let formData = new FormData();
-        formData.append("code", editor.getValue());
-        formData.append("problem_id", problemId);
-        formData.append("csrfmiddlewaretoken","{{ csrf_token }}");
-
-        const res = await fetch('/api/save/',{
-            method:'POST',
-            body:formData
-        });
-
-        if(res.ok){
-            statusMsg.innerText = "Saved ✓";
-        } else {
-            statusMsg.innerText = "Save failed ❌";
+  <script>
+    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+      mode: 'python',
+      theme: 'arena',
+      lineNumbers: true,
+      indentUnit: 4,
+      tabSize: 4,
+      lineWrapping: true,
+      extraKeys: {
+        'Tab': cm => cm.execCommand('indentMore'),
+        'Shift-Tab': cm => cm.execCommand('indentLess'),
+        'Enter': 'newlineAndIndentContinueComment',
+        'Backspace': cm => {
+          if (cm.somethingSelected()) return CodeMirror.Pass;
+          const cur = cm.getCursor();
+          const line = cm.getLine(cur.line);
+          const before = line.slice(0, cur.ch);
+          if (/^\s+$/.test(before)) {
+            const tabSize = cm.getOption('tabSize') || 4;
+            const toDelete = cur.ch % tabSize || tabSize;
+            cm.replaceRange('', CodeMirror.Pos(cur.line, cur.ch - toDelete), cur);
+          } else { return CodeMirror.Pass; }
         }
+      },
+      autoCloseBrackets: true,
+      matchBrackets: true,
+    });
 
-    } catch (error){
-        statusMsg.innerText = "Network error ⚠️";
+    // Disable copy/paste/cut
+    editor.on('copy', (cm, e) => e.preventDefault());
+    editor.on('paste', (cm, e) => e.preventDefault());
+    editor.on('cut', (cm, e) => e.preventDefault());
+    editor.on('keydown', (cm, e) => {
+      if ((e.ctrlKey || e.metaKey) && ['c','v','x'].includes(e.key.toLowerCase())) e.preventDefault();
+    });
+
+    const statusMsg = document.getElementById('statusMsg');
+    const outputDiv = document.getElementById('output');
+    const problemId = '{{ problem.id }}';
+    const starterCode = `{{ problem.starter_code|escapejs }}`;
+
+    function resetCode() {
+      if (confirm('Reset to starter code?')) { editor.setValue(starterCode); statusMsg.textContent = 'Reset ✓'; }
     }
-}
-/* LOAD */
-async function loadCode(){
-    try {
+
+    async function saveCode() {
+      statusMsg.textContent = 'Saving...';
+      try {
+        const fd = new FormData();
+        fd.append('code', editor.getValue());
+        fd.append('problem_id', problemId);
+        fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        const res = await fetch('/api/save/', { method: 'POST', body: fd });
+        statusMsg.textContent = res.ok ? 'Saved ✓' : 'Save failed ✗';
+      } catch { statusMsg.textContent = 'Network error'; }
+    }
+
+    async function loadCode() {
+      try {
         const res = await fetch(`/api/load/${problemId}/`);
-
-        if (!res.ok) {
-            statusMsg.innerText = "Load failed ❌";
-            return;
-        }
-
+        if (!res.ok) { statusMsg.textContent = 'Load failed ✗'; return; }
         const data = await res.json();
-
-        if (data.code !== undefined) {
-            editor.setValue(data.code);
-            statusMsg.innerText = "Team Code Loaded ✓";
-        } else {
-            statusMsg.innerText = "No saved code";
-        }
-
-    } catch (err) {
-        statusMsg.innerText = "Network error ⚠️";
+        if (data.code !== undefined) { editor.setValue(data.code); statusMsg.textContent = 'Loaded ✓'; }
+        else statusMsg.textContent = 'No saved code';
+      } catch { statusMsg.textContent = 'Network error'; }
     }
-}
-/* RUN */
-function runCode(){
 
-    outputDiv.innerText = "Running...";
-    outputDiv.style.color = "#58a6ff";
+    async function runCode() {
+      await saveCode();
+      outputDiv.style.color = 'var(--amber)';
+      outputDiv.textContent = 'Running...';
+      const fd = new FormData();
+      fd.append('code', editor.getValue());
+      fd.append('problem_id', problemId);
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fetch('/api/run-custom/', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) {
+            outputDiv.style.color = 'var(--danger)';
+            outputDiv.textContent = data.error;
+          } else {
+            outputDiv.style.color = 'var(--run-green)';
+            outputDiv.textContent = data.output || '(no output)';
+          }
+          statusMsg.textContent = 'Run complete';
+        })
+        .catch(err => {
+          outputDiv.style.color = 'var(--danger)';
+          outputDiv.textContent = 'Error: ' + err.message;
+          statusMsg.textContent = 'Error';
+        });
+    }
 
-    fetch('/api/run-custom/',{
-        method:'POST',
-        headers:{
-            'Content-Type':'application/x-www-form-urlencoded',
-            'X-CSRFToken':'{{ csrf_token }}'
-        },
-        body:`code=${encodeURIComponent(editor.getValue())}`
-    })
-    .then(res=>res.json())
-    .then(data=>{
+    async function submitCode() {
+      await saveCode();
+      outputDiv.style.color = 'var(--amber)';
+      outputDiv.textContent = 'Checking hidden test cases...';
+      fetch('/api/submit/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: `problem_id=${problemId}&code=${encodeURIComponent(editor.getValue())}`,
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'Accepted') {
+            outputDiv.style.color = 'var(--run-green)';
+            if (data.points > 0) {
+              outputDiv.textContent = '✓ Correct Answer! +' + data.points + ' pts awarded.';
+              document.getElementById('nav-total-score').textContent = data.points + ' pts';
+            } else {
+              outputDiv.textContent = '✓ Correct Answer! (Tutorial — no points awarded)';
+            }
+          } else if (data.status === 'Already Solved') {
+            outputDiv.style.color = 'var(--run-green)';
+            outputDiv.textContent = '✓ Already solved!';
+          } else if (data.error) {
+            outputDiv.style.color = 'var(--danger)';
+            outputDiv.textContent = '✗ ' + data.status + '\n' + data.error;
+          } else {
+            outputDiv.style.color = 'var(--danger)';
+            outputDiv.textContent = '✗ ' + data.status;
+          }
+          statusMsg.textContent = 'Submission complete';
+        });
+    }
 
-        if(data.error){
-            outputDiv.style.color = "#ff7b72";
-            outputDiv.innerText = data.error;
-        }else{
-            outputDiv.style.color = "#7ee787";
-            outputDiv.innerText = data.output || "Executed successfully.";
-        }
-
-        statusMsg.innerText = "Run Complete";
-    });
-}
-
-/* SUBMIT */
-function submitCode(){
-
-    outputDiv.innerText = "Checking hidden test cases...";
-    outputDiv.style.color = "#f2cc60";
- 
-    fetch('/api/submit/',{
-        method:'POST',
-        headers:{
-            'Content-Type':'application/x-www-form-urlencoded',
-            'X-CSRFToken':'{{ csrf_token }}'
-        },
-        body:`problem_id=${problemId}&code=${encodeURIComponent(editor.getValue())}`
-    })
-    .then(res=>res.json())
-    .then(data=>{
-
-        if(data.status === "Correct Answer!"){
-            outputDiv.style.color = "#7ee787";
-            outputDiv.innerText = "✅ Correct Answer!\nPoints awarded.";
-
-            document.getElementById("nav-total-score").innerText = data.new_total;
-        }else{
-            outputDiv.style.color = "#ff7b72";
-            outputDiv.innerText = "❌ " + data.status;
-        }
-
-        statusMsg.innerText = "Submission Complete";
-    });
-}
-const endTime = new Date("{{ end_time }}").getTime();
-const duration = 2 * 60 * 60 * 1000;
-
-function updateTimer() {
-    const now = new Date().getTime();
-    const distance = endTime - now;
-
-    if (distance < 0) {
-        document.getElementById("problem-timer").innerHTML = "TIME UP!";
+    // ── Timer ──
+    const endTime = new Date('{{ end_time }}').getTime();
+    function updateTimer() {
+      const dist = endTime - Date.now();
+      if (dist < 0) {
+        document.getElementById('problem-timer').textContent = 'TIME UP!';
+        const fill = document.getElementById('timer-progress-fill');
+        if (fill) fill.style.width = '0%';
         return;
+      }
+      const h = Math.floor(dist / 3600000);
+      const m = Math.floor((dist % 3600000) / 60000);
+      const s = Math.floor((dist % 60000) / 1000);
+      document.getElementById('problem-timer').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      const totalDuration = 2 * 60 * 60 * 1000;
+      const pct = Math.max(0, Math.min(100, (dist / totalDuration) * 100));
+      const fill = document.getElementById('timer-progress-fill');
+      if (fill) fill.style.width = pct + '%';
     }
+    setInterval(updateTimer, 1000);
+    updateTimer();
 
-    const hours = Math.floor(distance / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    // ── Status poll ──
+setInterval(async () => {
+  try {
+    const res = await fetch('/api/status/');
+    const data = await res.json();
+    if (data.is_finished) window.location.href = '/finished/';
+    else if (data.tutorial_finished && !data.is_live) window.location.href = '/';
+    else if (!data.is_live && !data.tutorial_live) window.location.href = '/';
+  } catch (e) {}
+}, 5000);
 
-    document.getElementById("problem-timer").innerHTML =
-        `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    // ── AI Hint panel ──
+    function openHintPanel() {
+      document.getElementById('ai-hint-panel').classList.add('open');
+      document.getElementById('ai-hint-overlay').classList.add('open');
+    }
+    function closeHintPanel() {
+      document.getElementById('ai-hint-panel').classList.remove('open');
+      document.getElementById('ai-hint-overlay').classList.remove('open');
+    }
+async function fetchHint() {
+  const btn = document.getElementById('hint-ask-btn');
+  btn.disabled = true; btn.textContent = 'Thinking...';
+  document.getElementById('hint-idle').style.display = 'none';
+  document.getElementById('hint-loading').style.display = 'flex';
+  document.getElementById('hint-content').style.display = 'none';
+
+  try {
+    const fd = new FormData();
+    fd.append('problem_id', problemId);
+    fd.append('code', editor.getValue());
+    fd.append('console_output', document.getElementById('output').textContent || '');
+    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    const res = await fetch('/api/hint/', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    document.getElementById('hint-loading').style.display = 'none';
+    const content = document.getElementById('hint-content');
+    content.textContent = data.hint || 'No hint available.';
+    content.style.display = 'block';
+
+    if (data.already_used) {
+      btn.disabled = true; btn.textContent = 'Hint used';
+    } else {
+      btn.disabled = true; btn.textContent = '✓ Hint used (1 per problem)';
+    }
+  } catch(e) {
+    document.getElementById('hint-loading').style.display = 'none';
+    const content = document.getElementById('hint-content');
+    content.textContent = 'Network error — try again.';
+    content.style.display = 'block';
+    btn.disabled = false; btn.textContent = '✨ Get AI Hint';
+  }
 }
 
-setInterval(updateTimer, 1000);
-updateTimer();
-setInterval(async () => {
-    try {
-      const res = await fetch('/api/status/');
-      const data = await res.json();
-      if (data.is_finished) {
-        window.location.href = '/finished/';
-      }
-    } catch (e) {}
-  }, 5000);
-  // Tab/window visibility monitoring
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        showWarning();
+    // ── Tour ──
+    const TOUR_STEPS = [
+      { targetId:'tour-action-strip', title:'The Problem Panel', desc:'Read the challenge on the left. Understand the input, output, and constraints before writing a single line.', arrow:'arrow-right', placement:'right' },
+      { targetId:'tour-editor-topbar', title:'Your Code Editor', desc:'Write Python here. Auto-indent, bracket matching, and syntax highlighting are built in. Copy-paste is disabled.', arrow:'arrow-bottom', placement:'below' },
+      { targetId:'tour-run-submit', title:'Run vs Submit', desc:'"Run" executes your code freely — great for testing. "Submit" runs hidden test cases and locks in your score.', arrow:'arrow-bottom', placement:'below' },
+      { targetId:'tour-output-panel', title:'Terminal Output', desc:'Your output, errors, and submission results appear here. Green means correct. Red means check your logic.', arrow:'arrow-top', placement:'above' },
+    ];
+    let currentTourStep = 0, tourActive = false;
+    function startTour() {
+      currentTourStep = 0; tourActive = true;
+      document.getElementById('tour-backdrop').classList.add('active');
+      renderTourStep();
     }
-});
+    function endTour() {
+      tourActive = false;
+      document.getElementById('tour-backdrop').classList.remove('active');
+      document.getElementById('tour-spotlight').style.display = 'none';
+      document.getElementById('tour-bubble').style.display = 'none';
+      localStorage.setItem('arena_tour_done', '1');
+    }
+    function advanceTour() {
+      if (currentTourStep < TOUR_STEPS.length - 1) { currentTourStep++; renderTourStep(); } else endTour();
+    }
+    function renderTourStep() {
+      const step = TOUR_STEPS[currentTourStep];
+      const target = document.getElementById(step.targetId);
+      const spotlight = document.getElementById('tour-spotlight');
+      const bubble = document.getElementById('tour-bubble');
+      if (!target) { endTour(); return; }
+      target.scrollIntoView({ block: 'nearest' });
+      const rect = target.getBoundingClientRect();
+      const pad = 6;
+      spotlight.style.display = 'block';
+      spotlight.style.left = (rect.left - pad) + 'px';
+      spotlight.style.top = (rect.top - pad) + 'px';
+      spotlight.style.width = (rect.width + pad * 2) + 'px';
+      spotlight.style.height = (rect.height + pad * 2) + 'px';
+      const total = TOUR_STEPS.length;
+      const pips = Array.from({ length: total }, (_, i) => {
+        let cls = 'tour-pip'; if (i < currentTourStep) cls += ' done'; else if (i === currentTourStep) cls += ' active';
+        return `<div class="${cls}"></div>`;
+      }).join('');
+      bubble.className = `tour-bubble ${step.arrow}`;
+      bubble.style.display = 'block';
+      bubble.innerHTML = `<span class="tour-step-chip">Step ${currentTourStep + 1} of ${total}</span><div class="tour-bubble-title">${step.title}</div><div class="tour-bubble-desc">${step.desc}</div><div class="tour-progress">${pips}</div><div class="tour-footer"><button class="tour-skip-btn" onclick="endTour()">Skip tour</button><button class="tour-next-btn" onclick="advanceTour()">${currentTourStep === total - 1 ? "Finish" : "Next"}</button></div>`;
+      const bubbleW = bubble.offsetWidth || 280, bubbleH = bubble.offsetHeight || 180, margin = 18;
+      let bLeft, bTop;
+      if (step.placement === 'right') { bLeft = rect.right + margin + pad; bTop = rect.top - pad; }
+      else if (step.placement === 'left') { bLeft = rect.left - bubbleW - margin - pad; bTop = rect.top - pad; }
+      else if (step.placement === 'below') { bLeft = rect.left - pad; bTop = rect.bottom + margin + pad; }
+      else { bLeft = rect.left - pad; bTop = rect.top - bubbleH - margin - pad; }
+      bLeft = Math.max(10, Math.min(bLeft, window.innerWidth - bubbleW - 10));
+      bTop = Math.max(10, Math.min(bTop, window.innerHeight - bubbleH - 10));
+      bubble.style.left = bLeft + 'px'; bubble.style.top = bTop + 'px';
+    }
+    document.addEventListener('keydown', e => {
+      if (!tourActive) return;
+      if (e.key === 'Escape') endTour();
+      if (e.key === 'ArrowRight') advanceTour();
+    });
+    if (!localStorage.getItem('arena_tour_done')) setTimeout(startTour, 900);
 
-window.addEventListener('blur', () => {
-    showWarning();
-});
+    // ── Resizable terminal ──
+    (function() {
+      const resizer = document.getElementById('terminal-resizer');
+      const panel = document.getElementById('tour-output-panel');
+      if (!resizer || !panel) return;
+      let isDragging = false;
+      resizer.addEventListener('mousedown', () => { isDragging = true; document.body.style.cursor = 'ns-resize'; document.body.style.userSelect = 'none'; });
+      document.addEventListener('mousemove', (e) => { if (!isDragging) return; const h = window.innerHeight - e.clientY; if (h >= 60 && h <= window.innerHeight * 0.7) panel.style.height = h + 'px'; });
+      document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; } });
+    })();
 
-function showWarning() {
-    // Create warning banner if it doesn't exist
-    let banner = document.getElementById('tab-warning');
-    if (!banner) {
+    // ── Tab switch warning ──
+    document.addEventListener('visibilitychange', () => { if (document.hidden) showWarning(); });
+    window.addEventListener('blur', () => showWarning());
+    function showWarning() {
+      let banner = document.getElementById('tab-warning');
+      if (!banner) {
         banner = document.createElement('div');
         banner.id = 'tab-warning';
-        banner.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-            background: linear-gradient(135deg, #ff5d6c, #ff8a4c);
-            color: white; text-align: center;
-            padding: 12px 20px;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px; font-weight: 700;
-            letter-spacing: 0.05em;
-            box-shadow: 0 4px 20px rgba(255,93,108,0.5);
-            animation: slideDown 0.3s ease-out;
-        `;
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#ff5d6c,#ff8a4c);color:white;text-align:center;padding:10px 20px;font-family:"DM Mono",monospace;font-size:12px;font-weight:700;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(255,93,108,0.5);animation:slideDown 0.3s ease-out;';
         banner.innerHTML = '⚠️ TAB SWITCH DETECTED — Your activity is being monitored by the instructor.';
         document.body.appendChild(banner);
-
-        // Add slideDown animation
         const style = document.createElement('style');
-        style.textContent = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
+        style.textContent = '@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}';
         document.head.appendChild(style);
+      }
+      banner.style.display = 'block';
+      setTimeout(() => { if (banner) banner.style.display = 'none'; }, 4000);
     }
-    banner.style.display = 'block';
 
-    // Hide after 4 seconds
-    setTimeout(() => {
-        if (banner) banner.style.display = 'none';
-    }, 4000);
-}
-    </script>
+    // ── Bonus toast — redirects to home and auto-opens bonus panel ──
+    (function(){
+      let toastEl = null, wasActive = false;
+      async function checkBonus() {
+        try {
+          const r = await fetch('/api/bonus/status/');
+          const d = await r.json();
+          if (d.available && !wasActive) {
+            if (toastEl) return;
+            wasActive = true;
+            const a = document.createElement('a');
+            // Redirect to home with query param so home.html auto-opens bonus panel
+            a.href = '/home/?openbonus=1';
+            a.className = 'bonus-global-toast';
+            const m = Math.floor((d.time_remaining_seconds||120)/60), s = (d.time_remaining_seconds||120)%60;
+            a.innerHTML = `
+              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#fec053,#f47b20,#d62976,#962fbf);"></div>
+              <div class="bgt-icon">⚡</div>
+              <div style="flex:1">
+                <div class="bgt-title">Bonus Round Active!</div>
+                <div class="bgt-sub">${d.title||'Bonus'} — ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} left</div>
+              </div>
+              <div class="bgt-cta">Go to Home →</div>
+            `;
+            document.body.appendChild(a);
+            toastEl = a;
+            setTimeout(() => { if(toastEl){toastEl.classList.add('out');setTimeout(()=>{if(toastEl){toastEl.remove();toastEl=null;}},350);} }, 10000);
+          } else if (!d.available) {
+            wasActive = false;
+            if(toastEl){toastEl.classList.add('out');setTimeout(()=>{if(toastEl){toastEl.remove();toastEl=null;}},350);}
+          }
+        } catch(e) {}
+      }
+      checkBonus();
+      setInterval(checkBonus, 5000);
+    })();
+    // ── Live rank poll + overtake toast ──
+    const _currentUser = "{{ request.user.username }}";
+    let _lastRank = null;
+    let _rankToastTimer = null;
+    function showRankToast(newRank) {
+      const toast = document.getElementById('rank-toast');
+      const sub = document.getElementById('rt-sub-text');
+      sub.textContent = 'You dropped to #' + newRank + ' — someone just passed you!';
+      toast.classList.add('show');
+      if (_rankToastTimer) clearTimeout(_rankToastTimer);
+      _rankToastTimer = setTimeout(() => toast.classList.remove('show'), 5000);
+    }
+    async function pollRank() {
+      try {
+        const res = await fetch('/api/leaderboard-data/');
+        const data = await res.json();
+        const teams = data.teams || [];
+        const idx = teams.findIndex(t => t.username === _currentUser);
+        const newRank = idx !== -1 ? idx + 1 : null;
+        if (_lastRank !== null && newRank !== null && newRank > _lastRank) {
+          showRankToast(newRank);
+        }
+        if (newRank !== null) _lastRank = newRank;
+      } catch(e) {}
+    }
+    pollRank();
+    setInterval(pollRank, 5000);
+
+  </script>
 </body>
 </html>

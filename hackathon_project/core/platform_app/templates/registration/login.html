@@ -1,449 +1,426 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hackathon | Login</title>
+<title>DIS Hackathon — Login</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg: #080a10;
-    --card: #0e1118;
-    --border: rgba(255,255,255,0.07);
-    --border-bright: rgba(255,255,255,0.13);
-    --primary: #5b8fff;
-    --accent: #ff6b35;
-    --text: #e8eaf0;
-    --muted: #4e536a;
-    --grad: linear-gradient(135deg, #5b8fff 0%, #ff6b35 100%);
+  --ink: #07050b;
+  --ink-1: #0e0a16;
+  --ink-2: #161122;
+  --ink-3: #221a33;
+  --wire: rgba(179, 75, 244, 0.08);
+  --wire-bright: rgba(179, 75, 244, 0.18);
+  --cyber-cyan: #b34bf4;
+  --cyber-orange: #ff7a00;
+  --amber: #b34bf4;
+  --amber-dim: rgba(179, 75, 244, 0.12);
+  --amber-glow: rgba(179, 75, 244, 0.25);
+  --lime: #e1306c;
+  --lime-dim: rgba(225, 48, 108, 0.12);
+  --fog: #8b8599;
+  --text: #e2dfe6;
+  --danger: #ff5577;
 }
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
 body {
-    font-family: 'Outfit', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: none;
-    position: relative;
+  font-family: 'DM Mono', monospace;
+  background: var(--ink);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
 }
-
-#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-.scanlines {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    background: repeating-linear-gradient(
-        0deg, transparent, transparent 2px,
-        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
-    );
+.bg-dots {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
-
-#cursor {
-    position: fixed; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--primary); pointer-events: none; z-index: 999;
-    transform: translate(-50%,-50%); mix-blend-mode: screen;
+.bg-bloom {
+  position: fixed; z-index: 0; pointer-events: none;
+  border-radius: 50%; filter: blur(100px);
 }
-#cursor-ring {
-    position: fixed; width: 30px; height: 30px; border-radius: 50%;
-    border: 1px solid rgba(91,143,255,0.4); pointer-events: none; z-index: 998;
-    transform: translate(-50%,-50%);
+.bg-bloom-a {
+  width: 480px; height: 480px;
+  top: -160px; left: -160px;
+  background: rgba(179,75,244,0.06);
 }
-
-/* Split layout */
-.page {
-    position: relative; z-index: 10;
-    display: flex;
-    width: min(880px, 96vw);
-    min-height: 480px;
-    border-radius: 20px;
-    border: 1px solid var(--border-bright);
-    overflow: hidden;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
-    animation: riseIn 0.7s cubic-bezier(0.16,1,0.3,1) backwards;
+.bg-bloom-b {
+  width: 360px; height: 360px;
+  bottom: -100px; right: -100px;
+  background: rgba(225,48,108,0.05);
 }
-@keyframes riseIn {
-    from { opacity: 0; transform: translateY(24px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
 }
-
-/* Left panel — branding */
-.left-panel {
-    width: 44%;
-    background: linear-gradient(160deg, #0d1020 0%, #080a10 100%);
-    border-right: 1px solid var(--border);
-    padding: 32px 40px;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
-    position: relative; overflow: hidden;
+.shell {
+  position: relative; z-index: 10;
+  display: flex;
+  width: min(1000px, 96vw);
+  min-height: 560px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255,255,255,0.18);
+  border-left: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 60px rgba(179,75,244,0.03);
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  animation: shellIn 0.6s cubic-bezier(0.16,1,0.3,1) backwards, shellPulse 6s ease-in-out 0.6s infinite;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(14,10,22,0.55) 40%, rgba(255,255,255,0.02) 100%);
 }
-.left-panel::before {
-    content: '';
-    position: absolute; top: -80px; left: -80px;
-    width: 300px; height: 300px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(91,143,255,0.08) 0%, transparent 70%);
-    pointer-events: none;
+@keyframes shellPulse {
+  0%, 100% {
+    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 60px rgba(179,75,244,0.03);
+  }
+  50% {
+    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08), inset 0 0 80px rgba(179,75,244,0.07), 0 0 70px rgba(179,75,244,0.12), 0 0 140px rgba(225,48,108,0.06);
+  }
 }
-.left-panel::after {
-    content: '';
-    position: absolute; bottom: -60px; right: -60px;
-    width: 240px; height: 240px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,107,53,0.07) 0%, transparent 70%);
-    pointer-events: none;
+@keyframes shellIn {
+  from { opacity:0; transform: translateY(28px) scale(0.98); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
 }
-
-.brand-top { position: relative; z-index: 1; }
+.panel-left {
+  width: 42%;
+  background: linear-gradient(150deg, rgba(179,75,244,0.1) 0%, rgba(14,10,22,0.45) 50%, rgba(225,48,108,0.06) 100%);
+  border-right: 1px solid rgba(255,255,255,0.07);
+  padding: 44px 40px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.panel-left::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.panel-left::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #b34bf4, #e1306c, #ff7a00);
+}
 .logo-mark {
-    width: 44px; height: 44px;
-    border: 1.5px solid rgba(91,143,255,0.45);
-    border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 40px;
 }
-.brand-name {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 12px;
+.logo-bracket {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px; font-weight: 400;
+  color: #e1306c;
+  line-height: 1;
 }
-.brand-headline {
-    font-size: clamp(26px, 3.5vw, 36px);
-    font-weight: 800; line-height: 1.15;
-    letter-spacing: -0.02em;
+.logo-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--fog);
 }
-.brand-headline .grad {
-    background: var(--grad);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+.brand-head {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 6vw, 76px);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.brand-head .amber {
+  background: linear-gradient(90deg, #b34bf4 0%, #e1306c 60%, #ff7a00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 .brand-sub {
-    margin-top: 8px;
-    font-size: 13px; color: var(--muted);
-    line-height: 1.65; font-weight: 300;
-    max-width: 220px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--fog);
+  line-height: 1.7;
+  max-width: 220px;
 }
-
-.brand-bottom { position: relative; z-index: 1; }
-.event-pills { display: flex; flex-direction: column; gap: 8px; }
-.pill {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; border-radius: 9px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
+.meta-pills {
+  display: flex; flex-direction: column; gap: 6px;
 }
-.pill-icon {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--muted);
-    min-width: 52px;
+.meta-pill {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  font-size: 11px;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.pill-val {
-    font-size: 13px; font-weight: 600; color: var(--text);
+.meta-pill-key { color: var(--fog); letter-spacing: 0.08em; }
+.meta-pill-val { color: var(--text); font-weight: 500; }
+.meta-pill-val.amber { color: var(--amber); }
+.meta-pill-val.lime { color: var(--lime); }
+.panel-right {
+  flex: 1;
+  background: linear-gradient(150deg, rgba(14,10,22,0.4) 0%, rgba(22,17,34,0.5) 50%, rgba(179,75,244,0.05) 100%);
+  padding: 52px 48px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
 }
-.pill-val.blue { color: var(--primary); }
-.pill-val.orange { color: var(--accent); }
-
-/* Right panel — form */
-.right-panel {
-    flex: 1;
-    background: var(--card);
-    padding: 48px 44px;
-    display: flex; flex-direction: column; justify-content: center;
+.panel-right::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.015) 60deg, transparent 120deg);
+  animation: panelRotate 12s linear infinite;
+  pointer-events: none;
 }
-
-.form-header { margin-bottom: 32px; }
-.form-header h2 {
-    font-size: 22px; font-weight: 800;
-    letter-spacing: -0.02em; margin-bottom: 6px;
+@keyframes panelRotate {
+  to { transform: rotate(360deg); }
 }
-.form-header p {
-    font-size: 13px; color: var(--muted); font-weight: 300;
+.form-eyebrow {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 10px;
 }
-
-form { width: 100%; }
-
-.input-group { margin-bottom: 20px; }
-label {
-    display: block; margin-bottom: 15px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--muted);
+.form-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 38px; letter-spacing: 0.03em;
+  color: var(--text); margin-bottom: 6px;
 }
-input {
-    width: 100%; padding: 11px 14px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border-bright);
-    color: var(--text); outline: none;
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 400;
-    transition: border-color 0.2s, background 0.2s;
+.form-sub {
+  font-size: 12px; color: var(--fog); margin-bottom: 36px; line-height: 1.6;
 }
-input:focus {
-    border-color: rgba(91,143,255,0.6);
-    background: rgba(91,143,255,0.04);
+.field { margin-bottom: 22px; }
+.field-label {
+  display: block; font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--fog); margin-bottom: 8px;
 }
-input::placeholder { color: var(--muted); }
-
+.field-input {
+  width: 100%; padding: 12px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.field-input:focus {
+  border-color: #e1306c;
+  background: rgba(225,48,108,0.03);
+  box-shadow: 0 0 10px rgba(225,48,108,0.15);
+}
+.field-input::placeholder { color: #32294d; }
 .errorlist {
-    background: rgba(255,70,70,0.07);
-    border: 1px solid rgba(255,70,70,0.2);
-    color: #ff7070; padding: 10px 14px;
-    border-radius: 9px; font-size: 12px;
-    margin-bottom: 16px; text-align: center;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.02em;
+  background: rgba(255, 0, 85, 0.06);
+  border: 1px solid rgba(255, 0, 85, 0.2);
+  color: var(--danger); padding: 10px 14px;
+  border-radius: 3px; font-size: 12px;
+  margin-bottom: 20px; text-align: center;
+  letter-spacing: 0.04em;
 }
-
 .submit-btn {
-    width: 100%; margin-top: 40px; padding: 13px;
-    border-radius: 11px; border: none;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 700; font-size: 15px;
-    cursor: pointer; color: #080a10;
-    background: var(--grad);
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 6px 24px rgba(91,143,255,0.25);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 12px; padding: 14px;
+  border-radius: 3px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #b34bf4, #e1306c);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 0.12em;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-weight: 800;
 }
-.submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 32px rgba(91,143,255,0.4);
+.submit-btn:hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(225,48,108,0.25); }
+.submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
 }
-.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-.loader {
-    width: 15px; height: 15px;
-    border: 2px solid rgba(0,0,0,0.2);
-    border-top: 2px solid #080a10;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    display: inline-block;
-}
-.hidden { display: none; }
+.spinner.show { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .form-footer {
-    margin-top: 20px; text-align: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px; color: #1e2235;
-    letter-spacing: 0.1em;
+  margin-top: 28px;
+  font-size: 10px; color: var(--ink-3);
+  letter-spacing: 0.1em; text-align: center;
 }
-
-/* Mobile: stack */
-@media (max-width: 620px) {
-    .page { flex-direction: column; }
-    .left-panel { width: 100%; padding: 32px 28px; border-right: none; border-bottom: 1px solid var(--border); }
-    .brand-sub, .event-pills { display: none; }
-    .right-panel { padding: 32px 28px; }
+@media (max-width: 640px) {
+  .shell { flex-direction: column; }
+  .panel-left { width: 100%; padding: 28px 28px 20px; border-right: none; border-bottom: 1px solid var(--wire); }
+  .meta-pills, .brand-sub { display: none; }
+  .panel-right { padding: 32px 28px; }
 }
 </style>
 </head>
 <body>
-
+<div class="bg-dots"></div>
+<div class="bg-bloom bg-bloom-a"></div>
+<div class="bg-bloom bg-bloom-b"></div>
 <canvas id="bg-canvas"></canvas>
-<div class="scanlines"></div>
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-
-<div class="page" id="page">
-    <!-- Left branding panel -->
-    <div class="left-panel">
-        <div class="brand-top">
-            <div class="logo-mark">
-                <svg viewBox="0 0 22 22" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
-                    <polyline points="8,4 2,11 8,18" stroke="#5b8fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <polyline points="14,4 20,11 14,18" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="brand-name">DIS Hackathon</div>
-            <h1 class="brand-headline">Code.<br><span class="grad">Compete.</span><br>Conquer.</h1>
-            <p class="brand-sub">One session. Fifteen problems. Two hours to prove what you're made of.</p>
-        </div>
-        <div class="brand-bottom">
-            <div class="event-pills">
-                <div class="pill">
-                    <span class="pill-icon">Event</span>
-                    <span class="pill-val blue">Round 2</span>
-                </div>
-                <div class="pill">
-                    <span class="pill-icon">Duration</span>
-                    <span class="pill-val">2 Hours</span>
-                </div>
-                <div class="pill">
-                    <span class="pill-icon">Format</span>
-                    <span class="pill-val orange">Live Judge</span>
-                </div>
-            </div>
-        </div>
+<div class="shell" id="shell">
+  <div class="panel-left">
+    <div>
+      <div class="logo-mark">
+        <span class="logo-bracket">{ }</span>
+        <span class="logo-name">DIS Hackathon</span>
+      </div>
+      <div class="brand-head">Code.<br><span class="amber">Compete.</span><br>Conquer.</div>
+      <p class="brand-sub">One session. Fifteen problems. Two hours to prove what your team is made of.</p>
     </div>
-
-    <!-- Right form panel -->
-    <div class="right-panel">
-        <div class="form-header">
-            <h2>Sign in to compete</h2>
-            <p>Use your team credentials to access the arena.</p>
-        </div>
-
-        <form method="post">
-            {% csrf_token %}
-
-            {% if form.errors %}
-                <div class="errorlist">Invalid team name or access code.</div>
-            {% endif %}
-
-            <div class="input-group">
-                <label>Team Name</label>
-                <input type="text" name="username" placeholder="Enter your team name" required autofocus>
-            </div>
-
-            <div class="input-group">
-                <label>Access Code</label>
-                <input type="password" name="password" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit" class="submit-btn" id="login-btn">
-                <span id="btn-text">Enter the Arena →</span>
-                <span id="btn-loader" class="loader hidden"></span>
-            </button>
-        </form>
-
-        <div class="form-footer">DIS HACKATHON • 2026</div>
+    <div class="meta-pills">
+      <div class="meta-pill">
+        <span class="meta-pill-key">Event</span>
+        <span class="meta-pill-val amber">Round 2</span>
+      </div>
+      <div class="meta-pill">
+        <span class="meta-pill-key">Duration</span>
+        <span class="meta-pill-val">2 hours</span>
+      </div>
+      <div class="meta-pill">
+        <span class="meta-pill-key">Format</span>
+        <span class="meta-pill-val lime">Live Judge</span>
+      </div>
     </div>
+  </div>
+  <div class="panel-right">
+    <div class="form-eyebrow">// Authentication</div>
+    <div class="form-title">Sign In</div>
+    <p class="form-sub">Use your team credentials to enter the arena.</p>
+    <form method="post" id="login-form">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="errorlist">Invalid team name or access code.</div>
+      {% endif %}
+      <div class="field">
+        <label class="field-label">Team Name</label>
+        <input class="field-input" type="text" name="username" placeholder="your_team_name" required autofocus>
+      </div>
+      <div class="field">
+        <label class="field-label">Access Code</label>
+        <input class="field-input" type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="submit-btn" id="login-btn">
+        <span id="btn-text">Enter the Arena</span>
+        <span class="spinner" id="btn-spinner"></span>
+      </button>
+    </form>
+    <div class="form-footer">DIS HACKATHON • 2026</div>
+  </div>
 </div>
-
 <script>
-window.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
-    const btn = document.getElementById("login-btn");
-    const text = document.getElementById("btn-text");
-    const loader = document.getElementById("btn-loader");
-    if (!form || !btn) return;
-    form.addEventListener("submit", function () {
-        btn.disabled = true;
-        text.innerText = "Authenticating...";
-        loader.classList.remove("hidden");
-    });
+document.getElementById('login-form').addEventListener('submit', function() {
+  const btn = document.getElementById('login-btn');
+  const text = document.getElementById('btn-text');
+  const spinner = document.getElementById('btn-spinner');
+  btn.disabled = true;
+  text.textContent = 'Authenticating';
+  spinner.classList.add('show');
 });
-
-const canvas = document.getElementById('bg-canvas');
-const ctx = canvas.getContext('2d');
-let W, H;
-const mouse = { x: -9999, y: -9999 };
-
-function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-resize();
-window.addEventListener('resize', resize);
-
-const COUNT = 40;
-const particles = Array.from({ length: COUNT }, () => {
-    const bvx = (Math.random() - 0.5) * 0.35;
-    const bvy = (Math.random() - 0.5) * 0.35;
-    return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: bvx, vy: bvy, bvx, bvy, r: Math.random() * 1.6 + 0.7, hue: Math.random() > 0.5 ? 226 : 24 };
-});
-
-let ripples = [];
-document.addEventListener('click', e => { ripples.push({ x: e.clientX, y: e.clientY, r: 0, alpha: 0.7 }); });
-
-const cursorEl = document.getElementById('cursor');
-const cursorRing = document.getElementById('cursor-ring');
-let ringX = -9999, ringY = -9999;
-
-document.addEventListener('mousemove', e => {
-    mouse.x = e.clientX; mouse.y = e.clientY;
-    cursorEl.style.left = e.clientX + 'px';
-    cursorEl.style.top = e.clientY + 'px';
-});
-
-const page = document.getElementById('page');
-document.addEventListener('mousemove', e => {
-    const rect = page.getBoundingClientRect();
+(function () {
+  const canvas = document.getElementById('bg-canvas');
+  const gl = canvas.getContext('webgl');
+  if (!gl) return;
+  const vsrc = `attribute vec2 a_pos;
+  void main(){gl_Position=vec4(a_pos,0.0,1.0);}`;
+  const fsrc = `#ifdef GL_ES
+  precision mediump float;
+  #endif
+  uniform vec2 u_res;
+  uniform vec2 u_mouse;
+  uniform float u_time;
+  float threadGrid(vec2 p){
+    float r=length(p),a=atan(p.y,p.x);
+    float aBent=a*1.2;
+    float grid=abs(fract(aBent/6.28318*30.0)-0.5)*1.5;
+    float width=0.9-0.5*r;
+    float line=smoothstep(width,1.0,grid);
+    line*=smoothstep(4.0,2.0,r);
+    return line;
+  }
+  void main(){
+    vec2 st=gl_FragCoord.xy/u_res.xy*2.0-1.0;
+    st.x*=u_res.x/u_res.y;
+    float t=u_time;
+    st*=3.5;
+    float speed=0.1;
+    float angle=atan(st.y,st.x);
+    float phase=t*speed;
+    float ripple=sin(phase*10.0+angle*2.0)*0.5+0.5;
+    ripple+=sin(length(st)*5.0-t);
+    float threads=threadGrid(st);
+    vec3 colA=vec3(0.702,0.294,0.957);
+    vec3 colB=vec3(0.882,0.188,0.424);
+    vec3 colC=vec3(1.0,0.478,0.0);
+    float mixAB=clamp(ripple*0.5,0.0,1.0);
+    float mixBC=clamp(threads*ripple*0.3,0.0,1.0);
+    vec3 col=mix(colA,colB,mixAB);
+    col=mix(col,colC,mixBC);
+    float brightness=ripple*0.18*(threads*(ripple*8.0))*0.22;
+    gl_FragColor=vec4(col*brightness*3.0,1.0);
+  }`;
+  function mkShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, vsrc));
+  gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, fsrc));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'a_pos');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const uRes = gl.getUniformLocation(prog, 'u_res');
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+  let mx = 0, my = 0;
+  const shell = document.getElementById('shell');
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    const rect = shell.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (W / 2);
-    const dy = (e.clientY - cy) / (H / 2);
-    page.style.transform = `perspective(1200px) rotateY(${dx * 3}deg) rotateX(${-dy * 2}deg)`;
-});
-document.addEventListener('mouseleave', () => {
-    page.style.transform = '';
-    mouse.x = -9999; mouse.y = -9999;
-});
-
-function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    ringX += (mouse.x - ringX) * 0.1;
-    ringY += (mouse.y - ringY) * 0.1;
-    cursorRing.style.left = ringX + 'px';
-    cursorRing.style.top = ringY + 'px';
-
-    if (mouse.x > 0) {
-        const grd = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 220);
-        grd.addColorStop(0, 'rgba(91,143,255,0.06)');
-        grd.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
-    }
-
-    ripples = ripples.filter(rp => rp.alpha > 0.02);
-    ripples.forEach(rp => {
-        rp.r += 5; rp.alpha *= 0.91;
-        ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(91,143,255,${rp.alpha})`; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r * 0.6, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,107,53,${rp.alpha * 0.5})`; ctx.lineWidth = 1; ctx.stroke();
-    });
-
-    particles.forEach(p => {
-        const dx = p.x - mouse.x, dy = p.y - mouse.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const REPEL = 110;
-        if (dist < REPEL && dist > 0) { const force = (REPEL - dist) / REPEL; p.vx += (dx / dist) * force * 1.1; p.vy += (dy / dist) * force * 1.1; }
-        p.vx += (p.bvx - p.vx) * 0.035; p.vy += (p.bvy - p.vy) * 0.035;
-        const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-        if (spd > 3.5) { p.vx = p.vx/spd*3.5; p.vy = p.vy/spd*3.5; }
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        const nearMouse = dist < 200 ? Math.max(0, 1 - dist / 200) : 0;
-        const alpha = 0.45 + nearMouse * 0.55;
-        const radius = p.r + nearMouse * 2.5;
-        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${p.hue},80%,70%,${alpha})`; ctx.fill();
-        if (nearMouse > 0.3) {
-            ctx.beginPath(); ctx.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
-            const hGrd = ctx.createRadialGradient(p.x, p.y, radius, p.x, p.y, radius*3);
-            hGrd.addColorStop(0, `hsla(${p.hue},80%,70%,${nearMouse * 0.15})`);
-            hGrd.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = hGrd; ctx.fill();
-        }
-    });
-
-    for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-            const a = particles[i], b = particles[j];
-            const dx = a.x - b.x, dy = a.y - b.y;
-            const d = Math.sqrt(dx*dx + dy*dy);
-            if (d < 90) {
-                const base = (1 - d/130) * 0.2;
-                const mda = Math.sqrt((a.x-mouse.x)**2+(a.y-mouse.y)**2);
-                const mdb = Math.sqrt((b.x-mouse.x)**2+(b.y-mouse.y)**2);
-                const boost = Math.max(0, 1 - Math.min(mda,mdb)/180) * 0.35;
-                ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                ctx.strokeStyle = `rgba(91,143,255,${base + boost})`;
-                ctx.lineWidth = boost > 0.1 ? 1.2 : 0.6; ctx.stroke();
-            }
-        }
-    }
-    requestAnimationFrame(draw);
-}
-draw();
+    const dx = (e.clientX - cx) / (window.innerWidth / 2);
+    const dy = (e.clientY - cy) / (window.innerHeight / 2);
+    shell.style.transform = `perspective(1400px) rotateY(${dx * 2.5}deg) rotateX(${-dy * 1.5}deg)`;
+  });
+  document.addEventListener('mouseleave', () => { shell.style.transform = ''; });
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  function render(ts) {
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, ts * 0.001);
+    gl.uniform2f(uMouse, mx, my);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
 </script>
 </body>
 </html>
