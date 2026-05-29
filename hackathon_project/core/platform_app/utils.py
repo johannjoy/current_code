@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-def run_python_code(code, input_data="", inject_var=None):
+def run_python_code(code, input_data="", inject_var=None, function_name=None):
     python_cmd = 'python' if sys.platform == 'win32' else 'python3'
 
     # Build the code to run
@@ -25,6 +25,16 @@ def run_python_code(code, input_data="", inject_var=None):
             var_names = [v.strip() for v in inject_var.replace(',', '\n').split('\n') if v.strip()]
             prefix = f"{var_names[0]} = {repr(input_data)}\n"
         user_code = prefix + code
+
+    # If a function_name is given and student didn't print anything themselves,
+    # auto-call the function and print its return value (LeetCode style)
+    if function_name:
+        var_names = [v.strip() for v in inject_var.replace(',', '\n').split('\n') if v.strip()] if inject_var else []
+        call_args = ', '.join(var_names)
+        auto_call = f"\n_result = {function_name}({call_args})\nif _result is not None: print(_result)\n"
+        # Only auto-call if there's no explicit print in user code
+        if 'print(' not in user_code:
+            user_code = user_code + auto_call
 
     # Wrap in sandbox
     sandbox = """

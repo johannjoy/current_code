@@ -235,7 +235,7 @@ def submit_code(request):
                 input_data = case['input']   
                 expected = case['expected']
 
-                output, error = run_python_code(user_code, input_data, inject_var=problem.input_variable)
+                output, error = run_python_code(user_code, input_data, inject_var=problem.input_variable, function_name=problem.function_name)
 
                 if error:
                     return JsonResponse({
@@ -243,8 +243,15 @@ def submit_code(request):
                         'error': error
                     })
 
-                if output.strip() != str(expected).strip():
-                    return JsonResponse({'status': 'Wrong Answer'})
+                # Normalize both sides for comparison (strip whitespace, normalize spaces)
+                output_norm = ' '.join(output.strip().split())
+                expected_norm = ' '.join(str(expected).strip().split())
+
+                if output_norm != expected_norm:
+                    return JsonResponse({
+                        'status': 'Wrong Answer',
+                        'error': f"Input:    {input_data}\nExpected: {expected}\nGot:      {output.strip()}"
+                    })
 
             except Exception as e:
                 return JsonResponse({
@@ -265,7 +272,7 @@ def submit_code(request):
                     if start_time.tzinfo is None:
                         start_time = tz.make_aware(start_time)
                     elapsed = (timezone.now() - start_time).total_seconds()
-                    time_penalty = int(elapsed / 120)
+                    time_penalty = int(elapsed / 60)
                     final_points = max(20, problem.base_points - time_penalty)
                 
                 progress.is_solved = True
@@ -444,7 +451,11 @@ def run_code_custom(request):
         user_code = request.POST.get('code')
         if not user_code:
             return JsonResponse({'output': None, 'error': 'No code provided'})
-        output, error = run_python_code(user_code)
+        problem_id = request.POST.get('problem_id')
+        problem = Problem.objects.filter(id=problem_id).first() if problem_id else None
+        function_name = problem.function_name if problem else None
+        inject_var = problem.input_variable if problem else None
+        output, error = run_python_code(user_code, inject_var=inject_var, function_name=function_name)
         return JsonResponse({'output': output, 'error': error})
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 @login_required
