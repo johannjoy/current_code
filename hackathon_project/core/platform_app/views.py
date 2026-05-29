@@ -3,9 +3,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Sum
+from django.db import transaction
 from .models import Problem, TeamProgress, HackathonState, BonusQuestion, BonusSubmission
 from .utils import run_python_code
 from django.utils import timezone
+from django.utils import timezone as tz
 from datetime import timedelta
 from django.db.models import Case, When, IntegerField
 import json
@@ -170,7 +172,10 @@ def problem_detail(request, problem_id):
         end_time = start + timedelta(minutes=20)
         mode = 'tutorial'
     else:
-        end_time = state.start_time + timedelta(hours=2)
+        start = state.start_time
+        if start.tzinfo is None:
+            start = tz.make_aware(start)
+        end_time = start + timedelta(hours=2)
         mode = 'official'
 
     problem = get_object_or_404(Problem, id=problem_id, is_hidden=False)
@@ -181,8 +186,10 @@ def problem_detail(request, problem_id):
 
     bonus_points = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
     total_score = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user)) + bonus_points
-    prev_id = problem_id - 1 if problem_id > 1 else None
-    next_id = problem_id + 1 if problem_id < 15 else None
+    all_problem_ids = list(Problem.objects.filter(is_hidden=False).order_by('id').values_list('id', flat=True))
+    current_index = all_problem_ids.index(problem_id) if problem_id in all_problem_ids else -1
+    prev_id = all_problem_ids[current_index - 1] if current_index > 0 else None
+    next_id = all_problem_ids[current_index + 1] if current_index != -1 and current_index < len(all_problem_ids) - 1 else None
 
     return render(request, 'problem.html', {
         'end_time': end_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -202,11 +209,15 @@ def save_code(request):
         code = request.POST.get('code')
         TeamProgress.objects.filter(team=request.user, problem_id=p_id).update(current_code=code)
         return JsonResponse({'status': 'Saved'})
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 
 @login_required
 def load_code(request, problem_id):
-    progress = TeamProgress.objects.get(team=request.user, problem_id=problem_id)
-    return JsonResponse({'code': progress.current_code})
+    try:
+        progress = TeamProgress.objects.get(team=request.user, problem_id=problem_id)
+        return JsonResponse({'code': progress.current_code})
+    except TeamProgress.DoesNotExist:
+        return JsonResponse({'code': ''})
 
 @login_required
 def submit_code(request):
@@ -215,12 +226,6 @@ def submit_code(request):
         user_code = request.POST.get('code')
         problem = get_object_or_404(Problem, id=p_id)
         
-        if 'import' in user_code:
-            return JsonResponse({
-                'status': 'Runtime Error',
-                'error': 'Import statements are not allowed.'
-            })
-            
         progress = get_object_or_404(TeamProgress, team=request.user, problem=problem)
         state = HackathonState.objects.first()
         
@@ -248,28 +253,34 @@ def submit_code(request):
                 })
 
         # 2. If it reaches here, all cases passed
-        if not progress.is_solved:
-            tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished if state else False
-            
-            if tutorial_active:
-                # Tutorial Round: Mark as solved, but reward NO points
-                final_points = 0
-            else:
-                # Official Round: Calculate points with time penalty safely
-                start_time = state.start_time if (state and state.start_time) else timezone.now()
-                elapsed = (timezone.now() - start_time).total_seconds()
-                time_penalty = int(elapsed / 120)
-                final_points = max(20, problem.base_points - time_penalty)
-            
-            # Save the record to database
-            progress.is_solved = True
-            progress.points = final_points
-            progress.current_code = user_code
-            progress.save()
-            
-            return JsonResponse({'status': 'Accepted', 'points': final_points})
+        with transaction.atomic():
+            progress = TeamProgress.objects.select_for_update().get(team=request.user, problem=problem)
+            if not progress.is_solved:
+                tutorial_active = state.tutorial_is_started and not state.tutorial_is_finished if state else False
+                
+                if tutorial_active:
+                    final_points = 0
+                else:
+                    start_time = state.start_time if (state and state.start_time) else timezone.now()
+                    if start_time.tzinfo is None:
+                        start_time = tz.make_aware(start_time)
+                    elapsed = (timezone.now() - start_time).total_seconds()
+                    time_penalty = int(elapsed / 120)
+                    final_points = max(20, problem.base_points - time_penalty)
+                
+                progress.is_solved = True
+                progress.points = final_points
+                progress.current_code = user_code
+                progress.save()
+
+                bonus_pts = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
+                total_score = TeamProgress.objects.filter(team=request.user).aggregate(s=Sum('points'))['s'] or 0
+                total_score += bonus_pts
+
+                return JsonResponse({'status': 'Accepted', 'points': final_points, 'total_score': total_score})
             
         return JsonResponse({'status': 'Already Solved'})
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 
 @login_required
 def bonus_status(request):
@@ -281,7 +292,10 @@ def bonus_status(request):
     if not bonus or not bonus.is_active:
         return JsonResponse({'available': False})
 
-    elapsed_minutes = (timezone.now() - state.start_time).total_seconds() / 60
+    bonus_start = state.start_time
+    if bonus_start.tzinfo is None:
+        bonus_start = tz.make_aware(bonus_start)
+    elapsed_minutes = (timezone.now() - bonus_start).total_seconds() / 60
     if elapsed_minutes < bonus.appear_after_minutes:
         return JsonResponse({'available': False})
 
@@ -335,16 +349,12 @@ def bonus_submit(request):
     if request.method != "POST":
         return JsonResponse({'status': 'error'})
 
-    bonus = BonusQuestion.objects.first()
-    if not bonus or not bonus.is_active:
+    bonus = BonusQuestion.objects.filter(is_active=True).first()
+    if not bonus:
         return JsonResponse({'status': 'Bonus not active'})
 
     if BonusSubmission.objects.filter(bonus=bonus, team=request.user, is_correct=True).exists():
         return JsonResponse({'status': 'Already submitted'})
-
-    winners_so_far = BonusSubmission.objects.filter(bonus=bonus, is_correct=True).count()
-    if winners_so_far >= bonus.max_winners:
-        return JsonResponse({'status': 'Bonus closed — all spots taken'})
 
     if bonus.activated_at:
         open_minutes = (timezone.now() - bonus.activated_at).total_seconds() / 60
@@ -358,40 +368,43 @@ def bonus_submit(request):
         return JsonResponse({'status': 'Runtime Error', 'error': error})
 
     is_correct = output.strip() == bonus.expected_output.strip()
-    points_awarded = 0
-
-    if is_correct:
-        winners_so_far = BonusSubmission.objects.filter(bonus=bonus, is_correct=True).count()
-        if winners_so_far < bonus.max_winners:
-            points_awarded = max(0, bonus.max_points - (winners_so_far * bonus.points_step))
 
     if not is_correct:
         return JsonResponse({'status': 'Wrong Answer — check your input format.'})
 
-    BonusSubmission.objects.create(
-        team=request.user, bonus=bonus,
-        submitted_input=user_input,
-        is_correct=True,
-        points_awarded=points_awarded,
-    )
+    with transaction.atomic():
+        # Lock all existing correct submissions for this bonus to prevent race
+        winners_so_far = BonusSubmission.objects.select_for_update().filter(bonus=bonus, is_correct=True).count()
+        if winners_so_far >= bonus.max_winners:
+            return JsonResponse({'status': 'Bonus closed — all spots taken'})
 
-    if is_correct and points_awarded > 0:
+        points_awarded = max(0, bonus.max_points - (winners_so_far * bonus.points_step))
+
+        BonusSubmission.objects.create(
+            team=request.user, bonus=bonus,
+            submitted_input=user_input,
+            is_correct=True,
+            points_awarded=points_awarded,
+        )
+
+    if points_awarded > 0:
         new_total = (
             sum(tp.points for tp in TeamProgress.objects.filter(team=request.user))
             + (BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0)
         )
         return JsonResponse({'status': 'Correct!', 'points_awarded': points_awarded, 'new_total': new_total})
-    elif is_correct:
-        return JsonResponse({'status': 'Correct! But all point slots were just taken.'})
     else:
-        return JsonResponse({'status': 'Wrong Answer — check your input format.'})
+        return JsonResponse({'status': 'Correct! But all point slots were just taken.'})
 @login_required
 def check_hackathon_status(request):
     state = HackathonState.objects.first()
     if not state or not state.start_time:
         # Check tutorial
         if state and state.tutorial_is_started and not state.tutorial_is_finished and state.tutorial_start_time:
-            tutorial_end = state.tutorial_start_time + timedelta(minutes=20)
+            tut_start = state.tutorial_start_time
+            if tut_start.tzinfo is None:
+                tut_start = tz.make_aware(tut_start)
+            tutorial_end = tut_start + timedelta(minutes=20)
             if timezone.now() >= tutorial_end:
                 state.tutorial_is_finished = True
                 state.save()
@@ -399,14 +412,20 @@ def check_hackathon_status(request):
             return JsonResponse({'is_finished': False, 'is_live': False, 'tutorial_live': True, 'tutorial_finished': False})
         return JsonResponse({'is_finished': False, 'is_live': False, 'tutorial_live': False, 'tutorial_finished': False})
 
-    end_time = state.start_time + timedelta(hours=2)
+    off_start = state.start_time
+    if off_start.tzinfo is None:
+        off_start = tz.make_aware(off_start)
+    end_time = off_start + timedelta(hours=2)
     if timezone.now() >= end_time:
         state.is_finished = True
         state.save()
 
     # Check tutorial timeout too
     if state.tutorial_is_started and not state.tutorial_is_finished and state.tutorial_start_time:
-        tutorial_end = state.tutorial_start_time + timedelta(minutes=20)
+        tut_start2 = state.tutorial_start_time
+        if tut_start2.tzinfo is None:
+            tut_start2 = tz.make_aware(tut_start2)
+        tutorial_end = tut_start2 + timedelta(minutes=20)
         if timezone.now() >= tutorial_end:
             state.tutorial_is_finished = True
             state.save()
@@ -423,13 +442,18 @@ def check_hackathon_status(request):
 def run_code_custom(request):
     if request.method == "POST":
         user_code = request.POST.get('code')
-        # This runs the code without any hidden variables injected
+        if not user_code:
+            return JsonResponse({'output': None, 'error': 'No code provided'})
         output, error = run_python_code(user_code)
         return JsonResponse({'output': output, 'error': error})
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 @login_required
 def finished(request):
     state = HackathonState.objects.first()
-    if state and state.is_started and not state.is_finished:
+    # Only show finished page if the official hackathon actually ran and is done
+    if not state or not state.is_started:
+        return redirect('waiting_room')
+    if state.is_started and not state.is_finished:
         return redirect('home')
     bonus_points = BonusSubmission.objects.filter(team=request.user, is_correct=True).aggregate(s=Sum('points_awarded'))['s'] or 0
     total_score = sum(tp.points for tp in TeamProgress.objects.filter(team=request.user)) + bonus_points

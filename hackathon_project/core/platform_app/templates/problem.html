@@ -416,6 +416,9 @@
     }
 
     async function submitCode() {
+      const submitBtn = document.getElementById('submit-btn');
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
       await saveCode();
       outputDiv.style.color = 'var(--amber)';
       outputDiv.textContent = 'Checking hidden test cases...';
@@ -430,7 +433,7 @@
             outputDiv.style.color = 'var(--run-green)';
             if (data.points > 0) {
               outputDiv.textContent = '✓ Correct Answer! +' + data.points + ' pts awarded.';
-              document.getElementById('nav-total-score').textContent = data.points + ' pts';
+              document.getElementById('nav-total-score').textContent = data.total_score + ' pts';
             } else {
               outputDiv.textContent = '✓ Correct Answer! (Tutorial — no points awarded)';
             }
@@ -445,6 +448,12 @@
             outputDiv.textContent = '✗ ' + data.status;
           }
           statusMsg.textContent = 'Submission complete';
+          submitBtn.disabled = false;
+        })
+        .catch(err => {
+          outputDiv.style.color = 'var(--danger)';
+          outputDiv.textContent = 'Error: ' + err.message;
+          submitBtn.disabled = false;
         });
     }
 
@@ -462,7 +471,7 @@
       const m = Math.floor((dist % 3600000) / 60000);
       const s = Math.floor((dist % 60000) / 1000);
       document.getElementById('problem-timer').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      const totalDuration = 2 * 60 * 60 * 1000;
+      const totalDuration = '{{ mode }}' === 'tutorial' ? 20 * 60 * 1000 : 2 * 60 * 60 * 1000;
       const pct = Math.max(0, Math.min(100, (dist / totalDuration) * 100));
       const fill = document.getElementById('timer-progress-fill');
       if (fill) fill.style.width = pct + '%';

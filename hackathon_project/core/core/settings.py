@@ -9,8 +9,6 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-LOGIN_REDIRECT_URL = '/accounts/profile/'
-
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -125,6 +123,7 @@ LOGIN_REDIRECT_URL = '/'  # Sends them straight to waiting room
 
 
 
-LOGOUT_REDIRECT_URL = '/accounts/login/'
-GROQ_API_KEY = 'x'
+LOGOUT_REDIRECT_URL = '/login/'
 
+import os
+GROQ_API_KEY = 'x'
